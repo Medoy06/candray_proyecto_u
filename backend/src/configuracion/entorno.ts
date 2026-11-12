@@ -10,6 +10,7 @@
 // =============================================================================
 import dotenv from 'dotenv';
 import { z } from 'zod';
+import { PERMISSION_PROFILES } from './permisos';
 
 // Carga backend/.env en process.env. "quiet" evita el mensaje publicitario que
 // dotenv imprime en cada arranque.
@@ -48,7 +49,7 @@ const envSchema = z.object({
 
   // Perfil de permisos (sección 7 del documento de diseño)
   PERFIL_PERMISOS: z
-    .enum(['demostracion', 'estricto'], {
+    .enum(PERMISSION_PROFILES, {
       errorMap: () => ({ message: 'debe ser demostracion o estricto' }),
     })
     .default('demostracion'),

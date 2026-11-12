@@ -1,0 +1,20 @@
+<<'EOF'
+# Decisión 001: auditoría de dependencias (12 de noviembre de 2026)
+
+`npm audit` reportó 3 vulnerabilidades en el backend. No se aplicó
+`npm audit fix --force` porque propone cambios que rompen compatibilidad.
+
+## minimatch (a través de nodemon): moderada
+- nodemon es una dependencia de desarrollo (`npm run dev`). No se instala ni se
+  ejecuta en producción (`npm start`).
+- Decisión: riesgo aceptado.
+
+## zod 3.25.76: alta
+- El aviso (GHSA-mrhx-c7xc-m3w5) describe consumo excesivo de memoria al validar
+  arreglos muy grandes que no tienen longitud máxima. No aclara si la línea 3.x
+  está afectada; el arreglo oficial está en Zod 4, que cambia la interfaz.
+- Decisión: se mantiene Zod 3 para no introducir fallos en la bifurcación.
+- Mitigaciones: límite explícito del tamaño del cuerpo de las peticiones,
+  límite de peticiones por IP, y `.max()` en todo arreglo de los esquemas.
+- Se vuelve a revisar si aparece un parche para 3.x y antes de la entrega final.
+EOF

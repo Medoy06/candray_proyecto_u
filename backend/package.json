@@ -7,7 +7,8 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrar": "ts-node --project ../scripts/tsconfig.json ../scripts/migrar.ts"
+    "migrar": "ts-node --project ../scripts/tsconfig.json ../scripts/migrar.ts",
+    "test": "vitest run"
   },
   "license": "UNLICENSED",
   "type": "commonjs",
@@ -29,8 +30,11 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.8.0",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.1",
     "nodemon": "^3.1.14",
+    "supertest": "^7.3.2",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
   }
 }
