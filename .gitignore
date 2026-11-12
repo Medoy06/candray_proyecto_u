@@ -1,0 +1,17 @@
+# Dependencias y compilacion
+node_modules/
+dist/
+build/
+
+# Secretos: nunca se suben
+.env
+.env.*
+!.env.example
+
+# Copia de referencia de Hospital Mio: se borra al terminar el Incremento 0
+_origen/
+
+# Registros y archivos del sistema
+*.log
+.DS_Store
+Thumbs.db
