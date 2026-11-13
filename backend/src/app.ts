@@ -18,6 +18,7 @@ import helmet from 'helmet';
 import { env } from './configuracion/entorno';
 import { JSON_BODY_LIMIT } from './configuracion/negocio';
 import { errorHandler } from './intermediarios/errores';
+import auditRoutes from './rutas/auditoria';
 import authRoutes from './rutas/autenticacion';
 import branchRoutes from './rutas/sucursales';
 import userRoutes from './rutas/usuarios';
@@ -88,6 +89,7 @@ export function createApp(options: AppOptions = {}): Express {
   app.use('/api/auth', authRoutes);
   app.use('/api/usuarios', userRoutes);
   app.use('/api/sucursales', branchRoutes);
+  app.use('/api/auditoria', auditRoutes);
 
   // Comprobación de que el servidor está vivo.
   app.get('/health', (_req, res) => {

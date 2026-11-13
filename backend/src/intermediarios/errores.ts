@@ -48,9 +48,11 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   const err = error as { message?: string; code?: string; type?: string; status?: number };
-  console.error(`[ERROR] ${req.method} ${req.path}:`, err.message ?? error);
-
+  // Los rechazos esperados (400, 403, 404, 409...) NO se escriben en la consola:
+  // son el funcionamiento normal y taparían los errores de verdad. Solo se
+  // registra lo que sale como 500 (ver más abajo).
   if (error instanceof AppError) {
+    if (error.statusCode >= 500) console.error(`[ERROR] ${req.method} ${req.path}:`, error.message);
     res.status(error.statusCode).json({ success: false, message: error.message });
     return;
   }
@@ -71,7 +73,8 @@ export function errorHandler(
     return;
   }
 
-  // Cualquier otra cosa es un fallo nuestro: se responde un mensaje genérico
-  // (el detalle queda solo en la consola del servidor).
+  // Cualquier otra cosa es un fallo nuestro. Se registra en la consola para
+  // investigarlo y al cliente solo se le responde un mensaje genérico.
+  console.error(`[ERROR] ${req.method} ${req.path}:`, err.message ?? error);
   res.status(500).json({ success: false, message: 'Error interno del servidor.' });
 }
