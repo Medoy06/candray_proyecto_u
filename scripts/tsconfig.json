@@ -6,5 +6,5 @@
     "typeRoots": ["../backend/node_modules/@types"],
     "types": ["node"]
   },
-  "include": ["./**/*", "../backend/src/**/*"]
+  "include": ["./**/*", "../base_datos/**/*.ts", "../backend/src/**/*"]
 }
