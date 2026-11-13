@@ -19,6 +19,8 @@ import { env } from './configuracion/entorno';
 import { JSON_BODY_LIMIT } from './configuracion/negocio';
 import { errorHandler } from './intermediarios/errores';
 import authRoutes from './rutas/autenticacion';
+import branchRoutes from './rutas/sucursales';
+import userRoutes from './rutas/usuarios';
 import { createLoginRateLimitHandler } from './utilidades/limitadorInicioSesion';
 
 // Dirección desde la que el navegador carga el frontend (Vite en desarrollo).
@@ -84,6 +86,8 @@ export function createApp(options: AppOptions = {}): Express {
 
   // Rutas de la API. Cada módulo nuevo se agrega aquí.
   app.use('/api/auth', authRoutes);
+  app.use('/api/usuarios', userRoutes);
+  app.use('/api/sucursales', branchRoutes);
 
   // Comprobación de que el servidor está vivo.
   app.get('/health', (_req, res) => {
