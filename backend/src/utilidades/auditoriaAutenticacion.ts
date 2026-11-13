@@ -37,12 +37,17 @@ export function sanitizeAttemptedEmail(attempted: string): string {
   return EMAIL_LIKE.test(email) ? email : NOT_AN_EMAIL;
 }
 
-// Registra un inicio de sesión correcto.
-export async function logLoginSuccess(userId: string, ip: string | undefined): Promise<void> {
+// Registra un inicio de sesión correcto, con la sucursal con la que entró.
+export async function logLoginSuccess(
+  userId: string,
+  ip: string | undefined,
+  branchId: string,
+): Promise<void> {
   await auditLog({
     entityType: 'auth',
     action: 'login_success',
     actorId: userId,
+    branchId,
     detail: { ip },
   });
 }
