@@ -15,6 +15,8 @@
 // =============================================================================
 import type { Request, Response } from 'express';
 import { ACCOUNT_LOCK_MINUTES } from '../configuracion/negocio';
+import { env } from '../configuracion/entorno';
+import { buildPermissions, capabilitiesForRole } from '../configuracion/permisos';
 import { seesAllBranches } from '../intermediarios/alcanceSucursal';
 import { getBranchAccess } from '../modelos/sucursales';
 import { burnPasswordCheck, findUserById, findUserByEmail, verifyPassword } from '../modelos/usuarios';
@@ -26,6 +28,9 @@ import {
 } from '../utilidades/auditoriaAutenticacion';
 import { isLocked, recordFailedAttempt, recordSuccessfulLogin } from '../utilidades/bloqueoCuenta';
 import { signToken } from '../utilidades/token';
+
+// Mapa de permisos del perfil activo (PERFIL_PERMISOS). Se arma una sola vez.
+const permissions = buildPermissions(env.PERFIL_PERMISOS);
 
 // Respuesta única para cualquier fallo de credenciales.
 function respondBadCredentials(res: Response): void {
@@ -44,7 +49,7 @@ function respondLocked(res: Response, minutes: number): void {
 
 // POST /api/auth/login
 // Recibe (ya validado): { email, password }.
-// Responde: 200 con { token, user, branches, activeBranchId }; 401 con
+// Responde: 200 con { token, user, capabilities, branches, activeBranchId }; 401 con
 // credenciales incorrectas; 403 si el usuario no tiene sucursales; 423 si la
 // cuenta está bloqueada.
 export async function login(req: Request, res: Response): Promise<void> {
@@ -121,6 +126,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     data: {
       token,
       user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role },
+      capabilities: capabilitiesForRole(permissions, user.role),
       branches: access.branches,
       activeBranchId: access.defaultBranchId,
     },
@@ -128,8 +134,8 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 // GET /api/auth/me   (requiere authenticate y resolveBranchScope antes)
-// Responde: los datos de la sesión actual: el usuario, las sucursales que puede
-// usar y la sucursal activa de esta petición (la de la cabecera X-Sucursal-Id,
+// Responde: los datos de la sesión actual: el usuario, sus capacidades, las
+// sucursales que puede usar y la sucursal activa de esta petición (la de la cabecera X-Sucursal-Id,
 // o la predeterminada).
 export async function getMe(req: Request, res: Response): Promise<void> {
   const user = await findUserById(req.user!.userId);
@@ -143,6 +149,7 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     success: true,
     data: {
       user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role },
+      capabilities: capabilitiesForRole(permissions, user.role),
       branches: scope.branches,
       activeBranchId: scope.activeBranchId,
     },

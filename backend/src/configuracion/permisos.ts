@@ -153,3 +153,12 @@ export function hasCapability(
 ): boolean {
   return permissions[capability].includes(role);
 }
+
+// Lista las capacidades que tiene un rol en un mapa de permisos dado.
+// Recibe: el mapa y el rol. Devuelve: las capacidades, en el orden de CAPABILITIES.
+// La usa el inicio de sesión para PUBLICAR al frontend lo que el usuario puede
+// hacer: así el frontend no necesita una copia propia de este mapa (que
+// terminaría desactualizada) y el menú sigue solo al perfil de permisos activo.
+export function capabilitiesForRole(permissions: PermissionMap, role: Role): Capability[] {
+  return CAPABILITIES.filter((capability) => hasCapability(permissions, role, capability));
+}

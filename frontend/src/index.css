@@ -1,0 +1,20 @@
+/* =============================================================================
+   index.css
+   Qué hace:     carga Tailwind y declara el color de acento como variable, para
+                 que cambie con la sucursal sin recompilar nada.
+   Depende de:   tema/aplicarTema.ts (que escribe --acento al cambiar de sucursal).
+
+   Las clases como bg-acento, text-acento o ring-acento usan --acento. El valor
+   de abajo es solo el de partida (antes de entrar a una sucursal).
+   ============================================================================= */
+@import "tailwindcss";
+
+:root {
+  --acento: #0f766e;
+}
+
+@theme inline {
+  --color-acento: var(--acento);
+  /* Versión más oscura del acento para el estado "hover" de los botones. */
+  --color-acento-oscuro: color-mix(in srgb, var(--acento) 82%, black);
+}
