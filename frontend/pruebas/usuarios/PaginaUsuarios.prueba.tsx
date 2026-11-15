@@ -32,6 +32,13 @@ describe('PaginaUsuarios — lista', () => {
     expect(doctor.getByText('Nunca')).toBeInTheDocument();
   });
 
+  it('la tabla tiene nombre accesible', async () => {
+    server();
+    mount();
+    await screen.findByText('Marta Doctora');
+    expect(screen.getByRole('table', { name: 'Lista de usuarios' })).toBeInTheDocument();
+  });
+
   it('el administrador ve "Todas" las sucursales y quien no tiene dice "Sin sucursales"', async () => {
     server();
     mount();

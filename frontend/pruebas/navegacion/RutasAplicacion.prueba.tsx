@@ -21,9 +21,18 @@ describe('RutasAplicacion', () => {
   });
 
   it('con la capacidad, la pantalla se abre (las que aún no tienen página muestran "En construcción")', () => {
+    renderConSesion(<RutasAplicacion />, { route: '/auditoria', capabilities: ['audit_read'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Auditoría' })).toBeInTheDocument();
+    expect(screen.getByText('En construcción')).toBeInTheDocument();
+  });
+
+  it('/sucursales abre la página real de sucursales, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: [] } }));
     renderConSesion(<RutasAplicacion />, { route: '/sucursales', capabilities: ['branches_manage'] });
     expect(screen.getByRole('heading', { level: 1, name: 'Sucursales' })).toBeInTheDocument();
-    expect(screen.getByText('En construcción')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Nueva sucursal/ })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText(/Todavía no hay sucursales/); // deja terminar la carga
   });
 
   it('/usuarios abre la página real de usuarios, no el aviso de construcción', async () => {

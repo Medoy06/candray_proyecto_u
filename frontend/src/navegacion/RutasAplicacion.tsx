@@ -18,12 +18,13 @@ import { ROUTES, type RouteId } from '../configuracion/rutas';
 import { PaginaEnConstruccion } from '../paginas/comunes/PaginaEnConstruccion';
 import { PaginaNoEncontrada } from '../paginas/comunes/PaginaNoEncontrada';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
+import { PaginaSucursales } from '../paginas/sucursales/PaginaSucursales';
 import { PaginaUsuarios } from '../paginas/usuarios/PaginaUsuarios';
 
 const PAGES: Record<RouteId, ComponentType> = {
   inicio: PaginaInicio,
   usuarios: PaginaUsuarios,
-  sucursales: () => <PaginaEnConstruccion id="sucursales" />,
+  sucursales: PaginaSucursales,
   auditoria: () => <PaginaEnConstruccion id="auditoria" />,
 };
 
