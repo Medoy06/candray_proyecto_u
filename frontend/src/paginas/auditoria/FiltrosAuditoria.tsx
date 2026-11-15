@@ -14,6 +14,11 @@ import { FormField, inputClass } from '../../componentes/ui/FormField';
 import { EMPTY_AUDIT_FILTERS, type AuditFacets, type AuditFilters } from '../../servicios/auditoria';
 import { actionLabel, entityLabel } from './etiquetasAuditoria';
 
+// Límites de los campos de fecha. Sin un máximo, el navegador deja escribir años
+// de hasta 6 dígitos (275760); con max="9999-12-31" el año queda en 4 dígitos.
+const MIN_DATE = '2000-01-01';
+const MAX_DATE = '9999-12-31';
+
 interface FiltrosAuditoriaProps {
   value: AuditFilters;
   facets: AuditFacets;
@@ -56,6 +61,8 @@ export function FiltrosAuditoria({ value, facets, onChange }: FiltrosAuditoriaPr
       <FormField label="Desde">
         <input
           type="date"
+          min={MIN_DATE}
+          max={MAX_DATE}
           value={value.from}
           onChange={(event) => onChange({ ...value, from: event.target.value })}
           className={inputClass}
@@ -64,6 +71,8 @@ export function FiltrosAuditoria({ value, facets, onChange }: FiltrosAuditoriaPr
       <FormField label="Hasta">
         <input
           type="date"
+          min={MIN_DATE}
+          max={MAX_DATE}
           value={value.to}
           onChange={(event) => onChange({ ...value, to: event.target.value })}
           className={inputClass}

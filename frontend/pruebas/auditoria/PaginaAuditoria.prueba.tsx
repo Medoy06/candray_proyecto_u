@@ -171,6 +171,16 @@ describe('PaginaAuditoria — filtros', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('las fechas tienen límites: el año no puede pasar de 4 dígitos', async () => {
+    server();
+    mount();
+    await screen.findByText('Ana Martínez');
+    for (const name of ['Desde', 'Hasta']) {
+      expect(screen.getByLabelText(name)).toHaveAttribute('max', '9999-12-31');
+      expect(screen.getByLabelText(name)).toHaveAttribute('min', '2000-01-01');
+    }
+  });
+
   it('desde y hasta iguales es un rango válido (un solo día)', async () => {
     const received = server();
     mount();
