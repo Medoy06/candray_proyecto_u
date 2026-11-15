@@ -18,8 +18,8 @@ export function CuentasDemostracion({ onPick }: CuentasDemostracionProps) {
   if (!import.meta.env.DEV) return null;
 
   return (
-    <div className="mt-6 border-t border-slate-200 pt-4">
-      <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="mt-6 border-t border-borde pt-4">
+      <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-texto-suave">
         Cuentas de demostración
       </p>
       <div className="flex flex-wrap justify-center gap-2">
@@ -28,7 +28,7 @@ export function CuentasDemostracion({ onPick }: CuentasDemostracionProps) {
             key={account.email}
             type="button"
             onClick={() => onPick(account.email, DEMO_PASSWORD)}
-            className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-600 transition-colors hover:border-acento hover:text-acento"
+            className="rounded-md border border-borde-fuerte px-3 py-1 text-xs text-texto-suave transition-colors hover:border-marca hover:text-marca"
           >
             {account.label}
           </button>

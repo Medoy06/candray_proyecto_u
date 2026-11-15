@@ -1,20 +1,76 @@
 /* =============================================================================
    index.css
-   Qué hace:     carga Tailwind y declara el color de acento como variable, para
-                 que cambie con la sucursal sin recompilar nada.
-   Depende de:   tema/aplicarTema.ts (que escribe --acento al cambiar de sucursal).
+   Qué hace:     carga Tailwind y declara el DISEÑO de toda la aplicación como
+                 "tokens": colores, tipografías y esquinas con nombre.
+   Depende de:   tema/aplicarTema.ts (escribe --acento al cambiar de sucursal).
 
-   Las clases como bg-acento, text-acento o ring-acento usan --acento. El valor
-   de abajo es solo el de partida (antes de entrar a una sucursal).
+   Idea central: las pantallas NO usan colores sueltos (bg-red-700, text-slate-500),
+   usan nombres por función (bg-marca, text-titulo, border-borde). Así el diseño
+   completo vive en este archivo: para ajustar un tono se cambia UNA línea aquí.
+
+   Hay tres familias, cada una con un papel distinto:
+     1. MARCA   (rojo de Candray): botones principales, opción activa y foco.
+                No cambia nunca, ni por sucursal.
+     2. ACENTO  (--acento): el color de la sucursal activa. Solo se usa en la
+                franja bajo el encabezado y en el punto junto al nombre de la
+                sucursal; nunca en textos (el administrador puede elegir
+                cualquier color y un texto podría quedar ilegible).
+     3. NEUTROS: texto, fondos y bordes, tomados de los sitios de Candray.
+
+   El rojo de la marca también es el color de los errores. Por eso un error
+   nunca se distingue SOLO por el color: lleva icono y texto (ver AlertaError).
    ============================================================================= */
 @import "tailwindcss";
 
+@theme {
+  /* --- Marca ------------------------------------------------------------- */
+  --color-marca: #af1d1d;          /* botones principales; contraste 7:1 con blanco */
+  --color-marca-oscuro: #8b0000;   /* al pasar el cursor por encima */
+
+  /* --- Texto, fondos y bordes -------------------------------------------- */
+  --color-titulo: #003449;         /* títulos y opción activa del menú */
+  --color-texto: #2b2f38;          /* texto normal */
+  --color-texto-suave: #5d6167;    /* texto secundario (ayudas, etiquetas) */
+  --color-fondo: #f9f9f9;          /* fondo general de la aplicación */
+  --color-superficie: #ffffff;     /* tarjetas, encabezado, menú lateral */
+  --color-apoyo: #eaeef0;          /* fondo de la opción activa o con el cursor encima */
+  --color-borde: #d8e0e3;          /* líneas divisorias */
+  --color-borde-fuerte: #9fb1b8;   /* borde de campos y botones secundarios */
+
+  /* --- Errores (siempre con icono y texto, nunca solo color) --------------- */
+  --color-error-fondo: #fbeaea;
+  --color-error-borde: #e3b4b4;
+  --color-error-texto: #7a1515;
+
+  /* --- Tipografía (se instalan con npm, no dependen de internet) ----------- */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif; /* tablas y formularios */
+  --font-titulo: "Barlow", ui-sans-serif, system-ui, sans-serif;       /* títulos */
+
+  /* --- Esquinas poco redondeadas, como en los sitios de Candray ------------ */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+}
+
+/* Color de la sucursal activa. El valor de abajo es solo el de partida (antes
+   de entrar a una sucursal); tema/aplicarTema.ts lo reemplaza en <html>. */
 :root {
-  --acento: #0f766e;
+  --acento: #003449;
 }
 
 @theme inline {
   --color-acento: var(--acento);
-  /* Versión más oscura del acento para el estado "hover" de los botones. */
-  --color-acento-oscuro: color-mix(in srgb, var(--acento) 82%, black);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+  }
+
+  /* Anillo de foco visible para quien navega con teclado. */
+  :focus-visible {
+    outline: 2px solid var(--color-marca);
+    outline-offset: 2px;
+  }
 }

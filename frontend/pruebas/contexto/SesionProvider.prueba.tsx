@@ -151,7 +151,7 @@ describe('Cerrar sesión', () => {
     expect(screen.getByText(/estado:anonymous sucursal:ninguna usuario:nadie/)).toBeInTheDocument();
     expect(getStoredToken()).toBeNull();
     expect(getStoredBranchId()).toBeNull();
-    expect(accent()).toBe('#0f766e'); // color de partida
+    expect(accent()).toBe('#003449'); // color de partida
   });
 
   it('se cierra sola si cualquier petición posterior responde 401', async () => {

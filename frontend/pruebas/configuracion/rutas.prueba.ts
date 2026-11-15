@@ -1,0 +1,78 @@
+// =============================================================================
+// rutas.prueba.ts
+// Qué prueba:   el mapa de pantallas (configuracion/rutas.ts): que es coherente
+//               y que visibleSections muestra a cada persona solo lo que le
+//               corresponde, sin mostrar nunca de más.
+// =============================================================================
+import { describe, expect, it } from 'vitest';
+import { CAPABILITIES, type Capability } from '../../src/configuracion/capacidades';
+import { canOpen, ROUTES, SECTIONS, visibleSections } from '../../src/configuracion/rutas';
+
+const canWith = (granted: Capability[]) => (capability: Capability) => granted.includes(capability);
+const labelsOf = (granted: Capability[]) =>
+  visibleSections(canWith(granted)).flatMap((section) => section.routes.map((route) => route.label));
+
+describe('mapa de rutas', () => {
+  it('cada dirección es única y empieza con "/"', () => {
+    const paths = ROUTES.map((route) => route.path);
+    expect(new Set(paths).size).toBe(paths.length);
+    for (const path of paths) expect(path.startsWith('/')).toBe(true);
+  });
+
+  it('cada id es único', () => {
+    const ids = ROUTES.map((route) => route.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('toda capacidad que pide una pantalla existe en la lista de capacidades', () => {
+    for (const route of ROUTES) {
+      if (route.capability !== null) expect(CAPABILITIES).toContain(route.capability);
+    }
+  });
+
+  it('toda pantalla pertenece a una sección que existe', () => {
+    const sectionKeys: string[] = SECTIONS.map((section) => section.key);
+    for (const route of ROUTES) expect(sectionKeys).toContain(route.section);
+  });
+
+  it('el Inicio está abierto a cualquier persona con sesión', () => {
+    const inicio = ROUTES.find((route) => route.id === 'inicio')!;
+    expect(inicio.path).toBe('/');
+    expect(inicio.capability).toBeNull();
+  });
+});
+
+describe('canOpen', () => {
+  const usuarios = ROUTES.find((route) => route.id === 'usuarios')!;
+
+  it('una pantalla con capacidad solo se abre si se tiene', () => {
+    expect(canOpen(usuarios, canWith(['users_manage']))).toBe(true);
+    expect(canOpen(usuarios, canWith(['audit_read']))).toBe(false);
+  });
+});
+
+describe('visibleSections', () => {
+  it('sin ninguna capacidad: solo el Inicio (lo mínimo, nunca de más)', () => {
+    expect(labelsOf([])).toEqual(['Inicio']);
+  });
+
+  it('una capacidad abre solo su pantalla', () => {
+    expect(labelsOf(['audit_read'])).toEqual(['Inicio', 'Auditoría']);
+  });
+
+  it('con todas las capacidades ve todas las pantallas', () => {
+    expect(labelsOf([...CAPABILITIES])).toEqual(ROUTES.map((route) => route.label));
+  });
+
+  it('una capacidad que ninguna pantalla pide no agrega nada', () => {
+    expect(labelsOf(['medical_records_read'])).toEqual(['Inicio']);
+  });
+
+  it('descarta las secciones que quedan vacías y respeta el orden del menú', () => {
+    expect(visibleSections(canWith([])).map((section) => section.key)).toEqual(['general']);
+    expect(visibleSections(canWith(['users_manage', 'audit_read'])).map((section) => section.key)).toEqual([
+      'general',
+      'administracion',
+    ]);
+  });
+});

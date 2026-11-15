@@ -6,8 +6,13 @@
 // =============================================================================
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
 import { onUnauthorized } from '../../src/servicios/clienteApi';
+import { installFakeWindow } from './ventana';
+
+beforeEach(() => {
+  installFakeWindow(false); // ventana ancha por defecto
+});
 
 afterEach(() => {
   cleanup(); // desmonta lo que dibujó la prueba

@@ -7,10 +7,12 @@
 // Depende de:   backend/src/configuracion/baseDatos.ts y modelos/usuarios.ts.
 // Lo usan:      scripts/reiniciar_demo.ts y las pruebas de la semilla.
 //
-// Todos los datos son inventados: correos del dominio .test, nombres ficticios,
-// direcciones y teléfonos de demostración. Los nombres de las sucursales sí
-// existen en Candray (Central, Escalón, Santa Tecla...), tomados de la
-// documentación del proyecto.
+// Los USUARIOS son inventados: correos del dominio .test y nombres ficticios.
+// Las SUCURSALES usan datos reales y públicos de Candray (dirección, teléfono y
+// horario publicados en sus sitios web), para que la demostración se vea real.
+// Cada sucursal guarda una sola hora de apertura y cierre: el horario de lunes
+// a viernes. (Los sábados cierran antes; horarios por día serían un cambio del
+// modelo, previsto para un incremento posterior.)
 //
 // Esta semilla va sobre una base VACÍA. Si ya hay usuarios de demostración, se
 // niega a continuar (reiniciar_demo.ts vacía la base antes de sembrar).
@@ -27,10 +29,10 @@ interface DemoBranch {
   code: string;
   name: string;
   address: string;
-  phone: string;
+  phone: string | null; // null si el dato público está incompleto
   opening_time: string;
   closing_time: string;
-  theme_color: string; // color de acento PROVISIONAL, se ajustará a la paleta de Candray
+  theme_color: string; // color de acento: tomado de la paleta de los sitios de Candray
   has_optical_counter: boolean;
   is_active: boolean;
 }
@@ -43,39 +45,40 @@ interface DemoUser {
 }
 
 // Dos sucursales piloto activas y una tercera inactiva (para mostrar que una
-// sucursal inactiva no aparece en el selector).
+// sucursal inactiva no aparece en el selector). Los colores de acento salen de
+// la paleta de los sitios de Candray: azul petróleo, verde azulado y verde oscuro.
 export const DEMO_BRANCHES: DemoBranch[] = [
   {
     code: 'CENTRAL',
     name: 'Candray Central',
-    address: 'San Salvador (dirección de demostración)',
-    phone: '2222-0001',
+    address: '1a Av. Norte con 15 Calle Poniente, Barrio San Miguelito, San Salvador',
+    phone: '2233-6500',
     opening_time: '08:00',
-    closing_time: '17:00',
-    theme_color: '#0F766E',
+    closing_time: '18:00',
+    theme_color: '#003449',
     has_optical_counter: true,
     is_active: true,
   },
   {
     code: 'ESCALON',
     name: 'Candray Escalón',
-    address: 'Colonia Escalón, San Salvador (dirección de demostración)',
-    phone: '2222-0002',
+    address: '91 Av. Norte #446, esq. 7a Calle Poniente, Colonia Escalón, San Salvador',
+    phone: '2233-6565',
     opening_time: '08:00',
-    closing_time: '17:00',
-    theme_color: '#1D4ED8',
+    closing_time: '18:00',
+    theme_color: '#276876',
     has_optical_counter: true,
     is_active: true,
   },
   {
-    code: 'SANTA_TECLA',
-    name: 'Candray Santa Tecla',
-    address: 'Santa Tecla, La Libertad (dirección de demostración)',
-    phone: '2222-0003',
-    opening_time: '08:00',
-    closing_time: '17:00',
-    theme_color: '#6B7280',
-    has_optical_counter: false,
+    code: 'METROSUR',
+    name: 'Candray Metrosur',
+    address: 'C.C. Metrosur, 12va Etapa, locales C2-206 y C2-207',
+    phone: null, // el teléfono publicado está incompleto: no se inventa
+    opening_time: '09:30',
+    closing_time: '17:30',
+    theme_color: '#2F695F',
+    has_optical_counter: true,
     is_active: false,
   },
 ];

@@ -22,6 +22,8 @@ export default defineConfig({
     include: ['pruebas/**/*.prueba.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: ['./pruebas/ayudas/preparar.ts'],
-    css: false,
+    // css: true hace que la prueba de diseño pueda leer index.css como texto
+    // (con false, Vitest lo entrega vacío). Ninguna otra prueba importa CSS.
+    css: true,
   },
 });

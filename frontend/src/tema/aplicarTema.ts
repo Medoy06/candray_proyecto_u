@@ -1,16 +1,18 @@
 // =============================================================================
 // aplicarTema.ts
-// Qué hace:     applyBranchTheme(): cambia el color de acento de toda la
-//               interfaz al de la sucursal activa.
+// Qué hace:     applyBranchTheme(): cambia el color de ACENTO de la interfaz al
+//               de la sucursal activa.
 // Depende de:   index.css (que declara la variable --acento).
 // Lo usa:       contexto/SesionProvider.tsx cada vez que cambia la sucursal.
 //
-// Funciona escribiendo la variable CSS --acento en <html>: todas las clases
-// bg-acento, text-acento, etc. cambian al instante, sin recargar ni recompilar.
+// Funciona escribiendo la variable CSS --acento en <html>: las clases bg-acento
+// cambian al instante, sin recargar ni recompilar. El acento es solo un detalle
+// (la franja bajo el encabezado y el punto junto al nombre de la sucursal); los
+// colores de la marca no cambian con la sucursal.
 // =============================================================================
 
 // Color de partida (antes de entrar a una sucursal). Igual al de index.css.
-export const DEFAULT_ACCENT = '#0f766e';
+export const DEFAULT_ACCENT = '#003449';
 
 // Un color válido es #RRGGBB. Se comprueba aquí también porque el valor se
 // escribe en una propiedad de estilo: nunca se debe escribir texto arbitrario.

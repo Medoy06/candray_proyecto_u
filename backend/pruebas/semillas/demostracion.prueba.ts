@@ -15,7 +15,7 @@ const app = createApp();
 
 // Códigos de las sucursales de la semilla (la base de pruebas puede tener otras
 // sucursales creadas por otras pruebas; solo se comparan las de la semilla).
-const SEED_CODES = ['CENTRAL', 'ESCALON', 'SANTA_TECLA'];
+const SEED_CODES = ['CENTRAL', 'ESCALON', 'METROSUR'];
 
 const login = (email: string) =>
   request(app).post('/api/auth/login').send({ email, password: DEMO_PASSWORD });
@@ -62,8 +62,19 @@ describe('Semilla de demostración', () => {
       const codes = response.body.data.branches.map((branch: { code: string }) => branch.code);
       expect(codes).toContain('CENTRAL');
       expect(codes).toContain('ESCALON');
-      expect(codes).not.toContain('SANTA_TECLA');
+      expect(codes).not.toContain('METROSUR');
     }
+  });
+
+  it('las sucursales piloto traen sus datos reales y su color de la paleta de Candray', async () => {
+    const response = await login('dr.mejia@candray.test');
+    const [central, escalon] = response.body.data.branches;
+    expect(central).toMatchObject({ code: 'CENTRAL', phone: '2233-6500', theme_color: '#003449' });
+    expect(central.address).toContain('15 Calle Poniente');
+    expect(escalon).toMatchObject({ code: 'ESCALON', phone: '2233-6565', theme_color: '#276876' });
+    expect(escalon.address).toContain('Escalón');
+    expect(central.opening_time).toBe('08:00:00');
+    expect(central.closing_time).toBe('18:00:00');
   });
 
   it('cada sucursal activa trae su color y su dato de óptica', async () => {
