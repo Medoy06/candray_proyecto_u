@@ -2,7 +2,8 @@
 // PaginaCitas.tsx
 // Qué hace:     la agenda de citas de un día en la sucursal activa: quién viene,
 //               con qué médico y a qué hora. Recepción puede marcar una cita
-//               como atendida, como "no asistió" o cancelarla.
+//               como atendida, como "no asistió", cancelarla, reprogramarla o
+//               agendar una cita nueva.
 // Depende de:   ganchos/useCitas.ts, useSesion.ts, componentes/ui y los
 //               componentes de esta carpeta.
 // Lo usa:       navegacion/RutasAplicacion.tsx (ruta "citas", capacidad
@@ -14,6 +15,7 @@
 // Igual que las demás páginas, esta es la "directora": guarda la fecha, el
 // filtro, la página, qué ventana está abierta y qué aviso se muestra.
 // =============================================================================
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AlertaError } from '../../componentes/ui/AlertaError';
 import { AlertaExito } from '../../componentes/ui/AlertaExito';
@@ -27,7 +29,9 @@ import { changeAppointmentStatus, type Appointment, type AppointmentStatus } fro
 import { getApiErrorMessage } from '../../utilidades/errorApi';
 import { todayText } from '../../utilidades/fechaLocal';
 import { formatDate, formatTime } from '../../utilidades/formatoFecha';
+import { dayOf, timeOf } from './formularioCita';
 import { FiltrosCitas } from './FiltrosCitas';
+import { FormularioCita } from './FormularioCita';
 import { FormularioCancelarCita } from './FormularioCancelarCita';
 import { TablaCitas } from './TablaCitas';
 
@@ -42,6 +46,8 @@ export function PaginaCitas() {
   const [page, setPage] = useState(1);
   const [closing, setClosing] = useState<Closing | null>(null);
   const [cancelling, setCancelling] = useState<Appointment | null>(null);
+  const [booking, setBooking] = useState(false);
+  const [rescheduling, setRescheduling] = useState<Appointment | null>(null);
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');
 
@@ -61,6 +67,26 @@ export function PaginaCitas() {
     setStatus(next);
     setPage(1);
   }
+
+  // Después de agendar o reprogramar: cerrar la ventana, avisar y mostrar el día de la cita,
+  // con todos los estados, para que la persona vea el resultado en la agenda.
+  function finishBooking(message: string, saved: Appointment) {
+    setBooking(false);
+    setRescheduling(null);
+    setActionError('');
+    setNotice(message);
+    const day = dayOf(saved);
+    if (day === date && status === '' && page === 1) {
+      reload(); // ya se está viendo ese día: solo hay que volver a pedirlo
+    } else {
+      setDate(day); // cambiar los filtros pide la agenda sola
+      setStatus('');
+      setPage(1);
+    }
+  }
+
+  const describe = (saved: Appointment) =>
+    `${formatDate(saved.starts_at)} a las ${timeOf(saved)} con ${saved.doctor_name}`;
 
   async function confirmClose() {
     const target = closing;
@@ -105,6 +131,15 @@ export function PaginaCitas() {
         </div>
       )}
 
+      {canManage && (
+        <div className="mb-4 flex justify-end">
+          <Boton variant="primario" onClick={() => open(setBooking, true)}>
+            <Plus className="size-4" aria-hidden="true" />
+            Nueva cita
+          </Boton>
+        </div>
+      )}
+
       <FiltrosCitas date={date} status={status} onDateChange={changeDate} onStatusChange={changeStatus} />
 
       {loadStatus === 'error' && (
@@ -128,6 +163,7 @@ export function PaginaCitas() {
             canManage={canManage}
             onAttended={(appointment) => open(setClosing, { appointment, status: 'completed' })}
             onNoShow={(appointment) => open(setClosing, { appointment, status: 'no_show' })}
+            onReschedule={(appointment) => open(setRescheduling, appointment)}
             onCancel={(appointment) => open(setCancelling, appointment)}
           />
           <Paginacion
@@ -141,6 +177,23 @@ export function PaginaCitas() {
         </>
       )}
 
+      {booking && (
+        <FormularioCita
+          branchId={activeBranch.id}
+          initialDate={date}
+          onClose={() => setBooking(false)}
+          onSaved={(saved) => finishBooking(`Cita agendada para ${saved.patient_name}: ${describe(saved)}.`, saved)}
+        />
+      )}
+      {rescheduling !== null && (
+        <FormularioCita
+          branchId={activeBranch.id}
+          initialDate={date}
+          appointment={rescheduling}
+          onClose={() => setRescheduling(null)}
+          onSaved={(saved) => finishBooking(`Cita de ${saved.patient_name} reprogramada: ${describe(saved)}.`, saved)}
+        />
+      )}
       {cancelling !== null && (
         <FormularioCancelarCita
           appointment={cancelling}

@@ -5,7 +5,13 @@
 //               correctos, y que devuelvan lo que corresponde.
 // =============================================================================
 import { describe, expect, it } from 'vitest';
-import { APPOINTMENT_PAGE_SIZE, changeAppointmentStatus, listAppointments } from '../../src/servicios/citas';
+import {
+  APPOINTMENT_PAGE_SIZE,
+  changeAppointmentStatus,
+  createAppointment,
+  listAppointments,
+  rescheduleAppointment,
+} from '../../src/servicios/citas';
 import { installFakeApi } from '../ayudas/apiFalsa';
 
 const PAGINATION = { page: 1, page_size: 50, total: 1, total_pages: 1 };
@@ -54,5 +60,20 @@ describe('changeAppointmentStatus', () => {
     const received = installFakeApi(() => ({ status: 200, data: { data: {} } }));
     await changeAppointmentStatus('c9', 'no_show', 'algo');
     expect(received[0].body).toEqual({ status: 'no_show' });
+  });
+});
+
+describe('createAppointment y rescheduleAppointment', () => {
+  it('createAppointment hace POST a /citas con el cuerpo y devuelve la cita', async () => {
+    const received = installFakeApi(() => ({ status: 201, data: { data: { id: 'n1' } } }));
+    const input = { patient_id: 'p1', doctor_id: 'd1', branch_id: 'b1', date: '2026-11-16', time: '08:00', reason: null };
+    expect(await createAppointment(input)).toEqual({ id: 'n1' });
+    expect(received[0]).toMatchObject({ method: 'post', url: '/citas', body: input });
+  });
+
+  it('rescheduleAppointment hace PATCH a /citas/:id solo con lo enviado', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: { id: 'c7' } } }));
+    expect(await rescheduleAppointment('c7', { time: '09:30' })).toEqual({ id: 'c7' });
+    expect(received[0]).toMatchObject({ method: 'patch', url: '/citas/c7', body: { time: '09:30' } });
   });
 });

@@ -23,10 +23,11 @@ interface TablaCitasProps {
   canManage: boolean;
   onAttended: (appointment: Appointment) => void;
   onNoShow: (appointment: Appointment) => void;
+  onReschedule: (appointment: Appointment) => void;
   onCancel: (appointment: Appointment) => void;
 }
 
-export function TablaCitas({ appointments, canManage, onAttended, onNoShow, onCancel }: TablaCitasProps) {
+export function TablaCitas({ appointments, canManage, onAttended, onNoShow, onReschedule, onCancel }: TablaCitasProps) {
   const columns: TablaColumna<Appointment>[] = [
     { id: 'time', header: 'Hora', noWrap: true, cell: (appointment) => formatTime(appointment.starts_at) },
     {
@@ -78,6 +79,9 @@ export function TablaCitas({ appointments, canManage, onAttended, onNoShow, onCa
             </Boton>
             <Boton size="sm" onClick={() => onNoShow(appointment)} aria-label={`Marcar que ${appointment.patient_name} no asistió`}>
               No asistió
+            </Boton>
+            <Boton size="sm" onClick={() => onReschedule(appointment)} aria-label={`Reprogramar la cita de ${appointment.patient_name}`}>
+              Reprogramar
             </Boton>
             <Boton size="sm" variant="peligro" onClick={() => onCancel(appointment)} aria-label={`Cancelar la cita de ${appointment.patient_name}`}>
               Cancelar

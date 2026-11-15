@@ -82,3 +82,28 @@ export async function changeAppointmentStatus(
   const response = await api.patch<{ data: Appointment }>(`/citas/${id}/estado`, body);
   return response.data.data;
 }
+
+// Lo que se envía al agendar una cita nueva (siempre en la sucursal activa).
+export interface CreateAppointmentInput {
+  patient_id: string;
+  doctor_id: string;
+  branch_id: string;
+  date: string;          // AAAA-MM-DD
+  time: string;          // HH:MM, en punto o y media
+  reason: string | null;
+}
+
+// Lo que se envía al reprogramar: solo los campos que cambiaron.
+export type RescheduleAppointmentInput = Partial<Pick<CreateAppointmentInput, 'doctor_id' | 'date' | 'time' | 'reason'>>;
+
+// POST /api/citas — agenda una cita. Lanza 409 si el médico o el paciente ya tienen una a esa hora.
+export async function createAppointment(input: CreateAppointmentInput): Promise<Appointment> {
+  const response = await api.post<{ data: Appointment }>('/citas', input);
+  return response.data.data;
+}
+
+// PATCH /api/citas/:id — cambia el médico, el día, la hora o el motivo de una cita programada.
+export async function rescheduleAppointment(id: string, input: RescheduleAppointmentInput): Promise<Appointment> {
+  const response = await api.patch<{ data: Appointment }>(`/citas/${id}`, input);
+  return response.data.data;
+}
