@@ -15,8 +15,8 @@ import { Route, Routes } from 'react-router-dom';
 import { Estructura } from '../componentes/estructura/Estructura';
 import { RutaProtegida } from '../componentes/estructura/RutaProtegida';
 import { ROUTES, type RouteId } from '../configuracion/rutas';
-import { PaginaEnConstruccion } from '../paginas/comunes/PaginaEnConstruccion';
 import { PaginaNoEncontrada } from '../paginas/comunes/PaginaNoEncontrada';
+import { PaginaAuditoria } from '../paginas/auditoria/PaginaAuditoria';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
 import { PaginaSucursales } from '../paginas/sucursales/PaginaSucursales';
 import { PaginaUsuarios } from '../paginas/usuarios/PaginaUsuarios';
@@ -25,7 +25,7 @@ const PAGES: Record<RouteId, ComponentType> = {
   inicio: PaginaInicio,
   usuarios: PaginaUsuarios,
   sucursales: PaginaSucursales,
-  auditoria: () => <PaginaEnConstruccion id="auditoria" />,
+  auditoria: PaginaAuditoria,
 };
 
 export function RutasAplicacion() {

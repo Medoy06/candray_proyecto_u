@@ -10,6 +10,7 @@ import {
   buildCreateInput,
   EMPTY_BRANCH_FORM,
   formFromBranch,
+  PHONE_MAX_LENGTH,
   validateBranchForm,
   type BranchFormValues,
 } from '../../src/paginas/sucursales/formularioSucursal';
@@ -56,11 +57,24 @@ describe('validateBranchForm', () => {
     expect(validateBranchForm({ ...VALID, name: 'ab' }, 'create')).toBe('');
   });
 
-  it('limita la dirección a 500 y el teléfono a 30', () => {
+  it('limita la dirección a 500 caracteres', () => {
     expect(validateBranchForm({ ...VALID, address: 'x'.repeat(501) }, 'create')).toMatch(/dirección/);
     expect(validateBranchForm({ ...VALID, address: 'x'.repeat(500) }, 'create')).toBe('');
-    expect(validateBranchForm({ ...VALID, phone: '1'.repeat(31) }, 'create')).toMatch(/teléfono/);
-    expect(validateBranchForm({ ...VALID, phone: '1'.repeat(30) }, 'create')).toBe('');
+  });
+
+  it('limita el teléfono a 20 caracteres', () => {
+    expect(PHONE_MAX_LENGTH).toBe(20);
+    expect(validateBranchForm({ ...VALID, phone: '1'.repeat(21) }, 'create')).toMatch(/demasiado largo/);
+    expect(validateBranchForm({ ...VALID, phone: '1'.repeat(20) }, 'create')).toBe('');
+  });
+
+  it('el teléfono solo acepta números, espacios y + - ( ) .', () => {
+    for (const valid of ['2233-6500', '+503 2233 6500', '(503) 2233-6500', '2233.6500', '']) {
+      expect(validateBranchForm({ ...VALID, phone: valid }, 'create')).toBe('');
+    }
+    for (const invalid of ['lorem ipsum', '2233-6500 ext', '2233#6500', '22336500;']) {
+      expect(validateBranchForm({ ...VALID, phone: invalid }, 'create')).toMatch(/solo puede llevar/);
+    }
   });
 
   it('pide las dos horas, en formato HH:MM', () => {

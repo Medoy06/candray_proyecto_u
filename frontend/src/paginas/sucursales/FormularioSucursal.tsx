@@ -22,6 +22,7 @@ import {
   buildCreateInput,
   EMPTY_BRANCH_FORM,
   formFromBranch,
+  PHONE_MAX_LENGTH,
   validateBranchForm,
   type BranchFormValues,
 } from './formularioSucursal';
@@ -121,6 +122,7 @@ export function FormularioSucursal({ branch, onClose, onSaved }: FormularioSucur
           <FormField label="Teléfono">
             <input
               type="tel"
+              maxLength={PHONE_MAX_LENGTH}
               className={inputClass}
               value={values.phone}
               onChange={(event) => set('phone', event.target.value)}

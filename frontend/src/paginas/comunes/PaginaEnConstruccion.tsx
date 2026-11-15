@@ -2,8 +2,10 @@
 // PaginaEnConstruccion.tsx
 // Qué hace:     página provisional de las pantallas cuyo contenido llega en un
 //               paso posterior. Toma el título y la descripción del mapa de rutas.
-// Lo usa:       navegacion/RutasAplicacion.tsx (Usuarios, Sucursales y Auditoría,
-//               hasta que el paso 5c las reemplace por las páginas reales).
+// Lo usa:       nadie por ahora: con la Auditoría (paso 5c-4) todas las
+//               pantallas del Incremento 0 ya son reales. Se conserva para las
+//               pantallas nuevas del Incremento 1 mientras se construyen; si no
+//               se usa, se elimina en la limpieza final.
 // =============================================================================
 import { ROUTES, type RouteId } from '../../configuracion/rutas';
 import { EncabezadoPagina } from '../../componentes/ui/EncabezadoPagina';

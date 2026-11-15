@@ -141,6 +141,22 @@ describe('PaginaSucursales — crear', () => {
     expect(field('Código')).toHaveValue('SUR_2');
   });
 
+  it('el campo de teléfono tiene tope de 20 caracteres (el navegador impide escribir más)', async () => {
+    await openCreate();
+    // user-event no aplica maxlength a type="tel"; el tope lo aplica el navegador real.
+    expect(field('Teléfono')).toHaveAttribute('maxlength', '20');
+  });
+
+  it('un teléfono con letras se rechaza en pantalla, sin llamar al servidor', async () => {
+    const received = await openCreate();
+    await userEvent.type(field('Código'), 'NUEVA');
+    await userEvent.type(field('Nombre'), 'Candray Nueva');
+    await userEvent.type(field('Teléfono'), 'lorem ipsum');
+    await submit();
+    expect(screen.getByRole('alert')).toHaveTextContent('El teléfono solo puede llevar números');
+    expect(writes(received, 'post')).toHaveLength(0);
+  });
+
   it('valida en pantalla, sin llamar al servidor', async () => {
     const received = await openCreate();
     await submit();
@@ -171,7 +187,7 @@ describe('PaginaSucursales — crear', () => {
       code: 'NUEVA', name: 'Candray Nueva', address: 'Calle 5', phone: '2200-1111', opening_time: '07:30',
       closing_time: '17:00', theme_color: '#112233', has_optical_counter: true,
     });
-    expect(screen.getByRole('status')).toHaveTextContent('Sucursal Candray Nueva creada.');
+    expect(screen.getByRole('status')).toHaveTextContent('Se creó la sucursal Candray Nueva.');
     await waitFor(() => expect(getsOf(received).length).toBeGreaterThanOrEqual(2));
   });
 

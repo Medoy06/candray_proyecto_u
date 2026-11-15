@@ -106,7 +106,7 @@ export function PaginaSucursales() {
         />
       )}
 
-      {creating && <FormularioSucursal onClose={() => setCreating(false)} onSaved={(saved) => finish(`Sucursal ${saved.name} creada.`)} />}
+      {creating && <FormularioSucursal onClose={() => setCreating(false)} onSaved={(saved) => finish(`Se creó la sucursal ${saved.name}.`)} />}
       {editing !== null && (
         <FormularioSucursal
           branch={editing}

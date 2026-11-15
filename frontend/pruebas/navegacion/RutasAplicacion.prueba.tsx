@@ -20,10 +20,17 @@ describe('RutasAplicacion', () => {
     expect(screen.getByRole('main')).toHaveTextContent('Bienvenido');
   });
 
-  it('con la capacidad, la pantalla se abre (las que aún no tienen página muestran "En construcción")', () => {
+  it('/auditoria abre la página real de la bitácora, no el aviso de construcción', async () => {
+    installFakeApi((request) =>
+      request.url === '/auditoria/filtros'
+        ? { status: 200, data: { data: { entity_types: [], actions: [] } } }
+        : { status: 200, data: { data: [], pagination: { page: 1, page_size: 25, total: 0, total_pages: 0 } } },
+    );
     renderConSesion(<RutasAplicacion />, { route: '/auditoria', capabilities: ['audit_read'] });
     expect(screen.getByRole('heading', { level: 1, name: 'Auditoría' })).toBeInTheDocument();
-    expect(screen.getByText('En construcción')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Acción' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText(/Todavía no hay registros/); // deja terminar la carga
   });
 
   it('/sucursales abre la página real de sucursales, no el aviso de construcción', async () => {

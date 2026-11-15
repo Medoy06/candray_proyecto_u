@@ -62,12 +62,20 @@ describe('App', () => {
   });
 
   it('se puede navegar con el menú y la opción actual queda marcada', async () => {
-    installFakeApi(() => ({ status: 200, data: { success: true, data: ADMIN } }));
+    // La pantalla de auditoría pide su lista y sus filtros: se responden vacíos.
+    installFakeApi((request) => {
+      if (request.url === '/auditoria') {
+        return { status: 200, data: { data: [], pagination: { page: 1, page_size: 25, total: 0, total_pages: 0 } } };
+      }
+      if (request.url === '/auditoria/filtros') return { status: 200, data: { data: { entity_types: [], actions: [] } } };
+      return { status: 200, data: { success: true, data: ADMIN } };
+    });
     mount();
     await iniciarSesion();
     await userEvent.click(await screen.findByRole('link', { name: 'Auditoría' }));
     expect(screen.getByRole('heading', { level: 1, name: 'Auditoría' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Auditoría' })).toHaveAttribute('aria-current', 'page');
+    await screen.findByText(/Todavía no hay registros/); // deja terminar la carga
   });
 
   it('cambiar de sucursal cambia el color de acento de toda la interfaz', async () => {

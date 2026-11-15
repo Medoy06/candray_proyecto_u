@@ -36,6 +36,11 @@ export const EMPTY_BRANCH_FORM: BranchFormValues = {
 };
 
 const CODE_PATTERN = /^[A-Z0-9_]{2,20}$/;
+
+// Teléfono: hasta 20 caracteres (el servidor admite 30, pero un número real no
+// los necesita) y solo lo que lleva un teléfono: dígitos, espacios, + - ( ) y punto.
+export const PHONE_MAX_LENGTH = 20;
+const PHONE_PATTERN = /^[0-9+()\-\s.]*$/;
 const COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -64,7 +69,10 @@ export function validateBranchForm(values: BranchFormValues, mode: 'create' | 'e
   }
   if (values.name.trim().length < 2) return 'Escriba el nombre de la sucursal (mínimo 2 caracteres).';
   if (values.address.trim().length > 500) return 'La dirección es demasiado larga (máximo 500 caracteres).';
-  if (values.phone.trim().length > 30) return 'El teléfono es demasiado largo (máximo 30 caracteres).';
+  if (values.phone.trim().length > PHONE_MAX_LENGTH) {
+    return `El teléfono es demasiado largo (máximo ${PHONE_MAX_LENGTH} caracteres).`;
+  }
+  if (!PHONE_PATTERN.test(values.phone)) return 'El teléfono solo puede llevar números, espacios y los signos + - ( ).';
   if (!TIME_PATTERN.test(values.opening_time) || !TIME_PATTERN.test(values.closing_time)) {
     return 'Indique la hora de apertura y la de cierre.';
   }
