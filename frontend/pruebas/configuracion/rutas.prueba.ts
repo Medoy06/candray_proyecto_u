@@ -67,6 +67,12 @@ describe('visibleSections', () => {
     expect(clinico?.routes.map((route) => route.path)).toEqual(['/pacientes']);
   });
 
+  it('Citas lo ve quien puede leer citas; médicos y recepción comparten la sección Clínico', () => {
+    expect(labelsOf(['appointments_read'])).toEqual(['Inicio', 'Citas']);
+    expect(labelsOf(['appointments_manage'])).toEqual(['Inicio']); // agendar sin poder leer no abre la pantalla
+    expect(labelsOf(['appointments_read', 'patients_search'])).toEqual(['Inicio', 'Pacientes', 'Citas']);
+  });
+
   it('con todas las capacidades ve todas las pantallas', () => {
     expect(labelsOf([...CAPABILITIES])).toEqual(ROUTES.map((route) => route.label));
   });

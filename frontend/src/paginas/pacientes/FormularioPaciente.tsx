@@ -15,6 +15,7 @@ import { FormField, inputClass } from '../../componentes/ui/FormField';
 import { ModalShell } from '../../componentes/ui/ModalShell';
 import { createPatient, updatePatient, type Patient } from '../../servicios/pacientes';
 import { getApiErrorMessage } from '../../utilidades/errorApi';
+import { todayText } from '../../utilidades/fechaLocal';
 import {
   buildCreateInput,
   buildPatientChanges,
@@ -23,7 +24,6 @@ import {
   MIN_BIRTH_DATE,
   NAME_MAX_LENGTH,
   PHONE_MAX_LENGTH,
-  todayText,
   validatePatientForm,
   type PatientFormValues,
 } from './formularioPaciente';

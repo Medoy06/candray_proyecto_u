@@ -63,7 +63,15 @@ describe('RutasAplicacion', () => {
     await screen.findByText(/Todavía no hay pacientes registrados/); // deja terminar la carga
   });
 
-  it.each(['/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
+  it('/citas abre la página real de la agenda, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: [], pagination: { page: 1, page_size: 50, total: 0, total_pages: 0 } } }));
+    renderConSesion(<RutasAplicacion />, { route: '/citas', capabilities: ['appointments_read'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Citas' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText('No hay citas para este día.'); // deja terminar la carga
+  });
+
+  it.each(['/citas', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
     'sin la capacidad, %s muestra "Sin acceso" y NO la pantalla',
     (path) => {
       renderConSesion(<RutasAplicacion />, { route: path, capabilities: [] });

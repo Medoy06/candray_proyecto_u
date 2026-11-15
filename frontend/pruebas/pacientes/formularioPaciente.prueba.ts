@@ -10,7 +10,6 @@ import {
   buildPatientChanges,
   EMPTY_PATIENT_FORM,
   formFromPatient,
-  todayText,
   validatePatientForm,
   type PatientFormValues,
 } from '../../src/paginas/pacientes/formularioPaciente';
@@ -30,13 +29,6 @@ const PATIENT: Patient = {
   id: 'p1', record_number: 7, full_name: 'Ana Pérez', birth_date: '1990-05-20', phone: '7000-1111',
   dui: '01234567-8', email: 'ana@correo.com', is_active: true, created_at: '', updated_at: '',
 };
-
-describe('todayText', () => {
-  it('escribe la fecha local con ceros a la izquierda', () => {
-    expect(todayText(new Date(2026, 0, 5))).toBe('2026-01-05');
-    expect(todayText(new Date(2026, 10, 15))).toBe('2026-11-15');
-  });
-});
 
 describe('validatePatientForm', () => {
   it('con los datos mínimos correctos no hay problema', () => {

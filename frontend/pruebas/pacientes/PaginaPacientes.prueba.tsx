@@ -10,9 +10,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { todayText } from '../../src/paginas/pacientes/formularioPaciente';
 import { PaginaPacientes } from '../../src/paginas/pacientes/PaginaPacientes';
 import type { Patient } from '../../src/servicios/pacientes';
+import { todayText } from '../../src/utilidades/fechaLocal';
 import { installFakeApi, type RecordedRequest } from '../ayudas/apiFalsa';
 import { renderConSesion } from '../ayudas/conSesion';
 

@@ -3,7 +3,7 @@
 // Qué hace:     la lógica (sin pantalla) del formulario de pacientes: valores
 //               iniciales, validación y cómo se arma lo que se envía al servidor
 //               al registrar y al editar.
-// Depende de:   servicios/pacientes.ts.
+// Depende de:   servicios/pacientes.ts y utilidades/fechaLocal.ts.
 // Lo usa:       paginas/pacientes/FormularioPaciente.tsx.
 //
 // Las reglas son las mismas que valida el backend (esquemas/pacientes.ts):
@@ -12,6 +12,7 @@
 // el servidor la compara con la de El Salvador y decide en caso de diferencia.
 // =============================================================================
 import type { CreatePatientInput, Patient, UpdatePatientInput } from '../../servicios/pacientes';
+import { todayText } from '../../utilidades/fechaLocal';
 
 // Todo en texto, tal como lo escribe la persona; se convierte al enviar.
 export interface PatientFormValues {
@@ -40,13 +41,6 @@ const PHONE_PATTERN = /^[0-9+() -]+$/;
 const DUI_PATTERN = /^\d{8}-\d$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-// La fecha de hoy como "AAAA-MM-DD" (sirve de tope para la fecha de nacimiento).
-export function todayText(now: Date = new Date()): string {
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
 
 // ¿El texto es una fecha que existe? (rechaza, por ejemplo, 2026-02-31)
 function isRealDate(text: string): boolean {
