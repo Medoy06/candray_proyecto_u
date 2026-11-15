@@ -24,6 +24,13 @@ describe('listAppointments', () => {
     expect(received[0].params).toEqual({ date: '2026-11-16', branch_id: 'b1', page: 2, page_size: APPOINTMENT_PAGE_SIZE });
   });
 
+  it('sin sucursal (null) no envía branch_id: el servidor devuelve todas las del usuario', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: [], pagination: PAGINATION } }));
+    await listAppointments({ date: '2026-11-16', branchId: null, status: '' }, 1);
+    expect(received[0].params).toEqual({ date: '2026-11-16', page: 1, page_size: APPOINTMENT_PAGE_SIZE });
+    expect(received[0].params).not.toHaveProperty('branch_id');
+  });
+
   it('con un estado elegido lo envía', async () => {
     const received = installFakeApi(() => ({ status: 200, data: { data: [], pagination: PAGINATION } }));
     await listAppointments({ date: '2026-11-16', branchId: 'b1', status: 'no_show' }, 1);

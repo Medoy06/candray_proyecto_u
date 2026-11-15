@@ -6,7 +6,8 @@
 //               servicios/citas.ts y utilidades/formatoFecha.ts.
 // Lo usa:       paginas/citas/PaginaCitas.tsx.
 //
-// No decide nada: avisa a la página cuando se pulsa una acción. La columna de
+// El médico no ve su propia columna "Médico", y una agenda de varias sucursales
+// agrega la columna "Sucursal". No decide nada: avisa a la página cuando se pulsa una acción. La columna de
 // acciones solo existe si la persona puede modificar citas (recepción), y solo
 // las citas "Programadas" tienen acciones: una cita ya cerrada no se vuelve a
 // tocar. Las citas canceladas muestran el motivo de la cancelación.
@@ -21,13 +22,15 @@ import { STATUS_LABELS, STATUS_TONES } from './etiquetasCitas';
 interface TablaCitasProps {
   appointments: Appointment[];
   canManage: boolean;
+  showDoctor: boolean;  // false cuando quien mira es el propio médico: todas las citas son suyas
+  showBranch: boolean;  // true cuando la agenda mezcla varias sucursales
   onAttended: (appointment: Appointment) => void;
   onNoShow: (appointment: Appointment) => void;
   onReschedule: (appointment: Appointment) => void;
   onCancel: (appointment: Appointment) => void;
 }
 
-export function TablaCitas({ appointments, canManage, onAttended, onNoShow, onReschedule, onCancel }: TablaCitasProps) {
+export function TablaCitas({ appointments, canManage, showDoctor, showBranch, onAttended, onNoShow, onReschedule, onCancel }: TablaCitasProps) {
   const columns: TablaColumna<Appointment>[] = [
     { id: 'time', header: 'Hora', noWrap: true, cell: (appointment) => formatTime(appointment.starts_at) },
     {
@@ -42,7 +45,6 @@ export function TablaCitas({ appointments, canManage, onAttended, onNoShow, onRe
         </>
       ),
     },
-    { id: 'doctor', header: 'Médico', cell: (appointment) => appointment.doctor_name },
     {
       id: 'reason',
       header: 'Motivo',
@@ -65,6 +67,11 @@ export function TablaCitas({ appointments, canManage, onAttended, onNoShow, onRe
       ),
     },
   ];
+
+  // Las columnas opcionales van en su lugar, antes del motivo.
+  const reasonAt = columns.findIndex((column) => column.id === 'reason');
+  if (showDoctor) columns.splice(reasonAt, 0, { id: 'doctor', header: 'Médico', cell: (appointment) => appointment.doctor_name });
+  if (showBranch) columns.splice(reasonAt, 0, { id: 'branch', header: 'Sucursal', cell: (appointment) => appointment.branch_name });
 
   if (canManage) {
     columns.push({

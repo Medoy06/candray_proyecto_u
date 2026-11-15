@@ -147,6 +147,42 @@ describe('PaginaCitas — agenda', () => {
   });
 });
 
+describe('PaginaCitas — agenda del médico', () => {
+  const ESCALON_APPT: Appointment = { ...ANA, id: 'c9', patient_name: 'Rosa Mena', branch_id: ESCALON.id, branch_name: 'Candray Escalón' };
+  const doctorServer = () =>
+    server((request) =>
+      request.method === 'get' && request.url === '/citas'
+        ? { status: 200, data: { data: [ANA, ESCALON_APPT], pagination: pagination(1, 1, 2) } }
+        : undefined,
+    );
+
+  it('pide sus citas de todas las sucursales (sin branch_id), aunque esté trabajando en una', async () => {
+    const received = doctorServer();
+    mountSoloConsulta();
+    await screen.findByText('Rosa Mena');
+    expect(getsOf(received)[0].params).toEqual({ date: TODAY, page: 1, page_size: 50 });
+  });
+
+  it('explica que es de todas sus sucursales y agrega la columna Sucursal en lugar de Médico', async () => {
+    doctorServer();
+    mountSoloConsulta();
+    await screen.findByText('Rosa Mena');
+    expect(screen.getByText(/Sus citas del día en todas sus sucursales/)).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Sucursal' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Médico' })).not.toBeInTheDocument();
+    expect(within(row('Rosa Mena')).getByText('Candray Escalón')).toBeInTheDocument();
+    expect(within(row('Ana Pérez')).getByText('Candray Central')).toBeInTheDocument();
+  });
+
+  it('recepción, en cambio, ve la columna Médico y no la de Sucursal', async () => {
+    server();
+    mount();
+    await screen.findByText('Ana Pérez');
+    expect(screen.getByRole('columnheader', { name: 'Médico' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Sucursal' })).not.toBeInTheDocument();
+  });
+});
+
 describe('PaginaCitas — fecha y estado', () => {
   it('muestra el día de la semana de la fecha elegida', async () => {
     server();

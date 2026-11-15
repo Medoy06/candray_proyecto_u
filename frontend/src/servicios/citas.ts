@@ -54,18 +54,19 @@ export interface AppointmentPage {
 // Filtros de la agenda de un día. Un estado vacío ('') significa "todos".
 export interface AppointmentFilters {
   date: string;              // AAAA-MM-DD
-  branchId: string;          // la sucursal cuya agenda se ve
+  branchId: string | null;   // la sucursal cuya agenda se ve (null = todas las del usuario)
   status: AppointmentStatus | '';
 }
 
-// GET /api/citas — la agenda de un día en una sucursal. Solo se envía el estado si se eligió.
+// GET /api/citas — la agenda de un día. Solo se envía la sucursal y el estado si se eligieron;
+// sin sucursal el servidor devuelve las de todas las sucursales a las que la persona tiene acceso.
 export async function listAppointments(filters: AppointmentFilters, page: number): Promise<AppointmentPage> {
   const params: Record<string, string | number> = {
     date: filters.date,
-    branch_id: filters.branchId,
     page,
     page_size: APPOINTMENT_PAGE_SIZE,
   };
+  if (filters.branchId !== null) params.branch_id = filters.branchId;
   if (filters.status !== '') params.status = filters.status;
   const response = await api.get<{ data: Appointment[]; pagination: AppointmentPagination }>('/citas', { params });
   return { rows: response.data.data, pagination: response.data.pagination };

@@ -9,8 +9,9 @@
 // Lo usa:       navegacion/RutasAplicacion.tsx (ruta "citas", capacidad
 //               appointments_read).
 //
-// Los médicos ven aquí SOLO sus propias citas (lo decide el backend) y ningún
-// botón de modificar. Al cambiar de sucursal arriba, la agenda cambia sola.
+// Los médicos ven aquí SOLO sus propias citas (lo decide el backend), de todas sus
+// sucursales juntas (con una columna "Sucursal"), y ningún botón de modificar.
+// Para el resto, al cambiar de sucursal arriba la agenda cambia sola.
 // No hay "eliminar": una cita cancelada queda en la agenda con su motivo.
 // Igual que las demás páginas, esta es la "directora": guarda la fecha, el
 // filtro, la página, qué ventana está abierta y qué aviso se muestra.
@@ -39,8 +40,11 @@ import { TablaCitas } from './TablaCitas';
 type Closing = { appointment: Appointment; status: 'completed' | 'no_show' };
 
 export function PaginaCitas() {
-  const { can, activeBranch } = useSesion();
+  const { can, activeBranch, user } = useSesion();
   const canManage = can('appointments_manage');
+  // Un médico atiende en varias sucursales: su agenda junta las de todas, sin importar
+  // en cuál esté trabajando arriba. El resto ve la agenda de la sucursal activa.
+  const isDoctor = user?.role === 'doctor';
   const [date, setDate] = useState(() => todayText());
   const [status, setStatus] = useState<AppointmentStatus | ''>('');
   const [page, setPage] = useState(1);
@@ -52,7 +56,7 @@ export function PaginaCitas() {
   const [actionError, setActionError] = useState('');
 
   const { status: loadStatus, data, error, reload } = useCitas(
-    { date, branchId: activeBranch?.id ?? '', status },
+    { date, branchId: isDoctor ? null : (activeBranch?.id ?? ''), status },
     page,
   );
 
@@ -118,7 +122,11 @@ export function PaginaCitas() {
 
   return (
     <div>
-      <EncabezadoPagina title="Citas" description={`Agenda de ${activeBranch.name}. Cada cita dura 30 minutos.`} />
+      <EncabezadoPagina title="Citas" description={
+          isDoctor
+            ? 'Sus citas del día en todas sus sucursales. Cada cita dura 30 minutos.'
+            : `Agenda de ${activeBranch.name}. Cada cita dura 30 minutos.`
+        } />
 
       {notice !== '' && (
         <div className="mb-4">
@@ -161,6 +169,8 @@ export function PaginaCitas() {
           <TablaCitas
             appointments={data.rows}
             canManage={canManage}
+            showDoctor={!isDoctor}
+            showBranch={isDoctor}
             onAttended={(appointment) => open(setClosing, { appointment, status: 'completed' })}
             onNoShow={(appointment) => open(setClosing, { appointment, status: 'no_show' })}
             onReschedule={(appointment) => open(setRescheduling, appointment)}
