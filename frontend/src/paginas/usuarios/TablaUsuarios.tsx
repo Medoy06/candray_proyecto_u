@@ -7,10 +7,14 @@
 // Lo usa:       paginas/usuarios/PaginaUsuarios.tsx.
 //
 // No decide nada: avisa a la página cuando se pulsa una acción. En su PROPIA
-// fila no se ofrece desactivar (el backend tampoco lo permite).
+// fila no se ofrece desactivar (el backend tampoco lo permite). "Desbloquear"
+// solo aparece en cuentas bloqueadas. Las acciones de edición son botones de
+// icono (con título al pasar el cursor y nombre accesible); activar/desactivar
+// lleva texto porque cambia el estado y tiene color propio.
 // El contenedor con overflow-x-auto evita que la tabla se corte en silencio en
 // ventanas angostas (lección del ítem 80 de Hospital Mio).
 // =============================================================================
+import { Building2, KeyRound, LockOpen, Pencil } from 'lucide-react';
 import { Boton } from '../../componentes/ui/Boton';
 import { Etiqueta } from '../../componentes/ui/Etiqueta';
 import { ROLE_LABELS, seesAllBranches } from '../../configuracion/roles';
@@ -21,6 +25,9 @@ interface TablaUsuariosProps {
   users: ManagedUser[];
   currentUserId: string;
   onEdit: (user: ManagedUser) => void;
+  onBranches: (user: ManagedUser) => void;
+  onPassword: (user: ManagedUser) => void;
+  onUnlock: (user: ManagedUser) => void;
   onToggleActive: (user: ManagedUser) => void;
 }
 
@@ -31,7 +38,7 @@ function branchesText(user: ManagedUser): string {
   return user.branches.map((branch) => branch.name).join(', ');
 }
 
-export function TablaUsuarios({ users, currentUserId, onEdit, onToggleActive }: TablaUsuariosProps) {
+export function TablaUsuarios({ users, currentUserId, onEdit, onBranches, onPassword, onUnlock, onToggleActive }: TablaUsuariosProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-borde bg-superficie">
       <table className="w-full text-left text-sm">
@@ -67,10 +74,21 @@ export function TablaUsuarios({ users, currentUserId, onEdit, onToggleActive }: 
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">{user.last_login === null ? 'Nunca' : formatDateTime(user.last_login)}</td>
                 <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <Boton size="sm" onClick={() => onEdit(user)} aria-label={`Editar a ${user.full_name}`}>
-                      Editar
+                  <div className="flex items-center justify-end gap-2">
+                    <Boton size="icono" onClick={() => onEdit(user)} aria-label={`Editar a ${user.full_name}`} title="Editar">
+                      <Pencil className="size-4" aria-hidden="true" />
                     </Boton>
+                    <Boton size="icono" onClick={() => onBranches(user)} aria-label={`Sucursales de ${user.full_name}`} title="Sucursales">
+                      <Building2 className="size-4" aria-hidden="true" />
+                    </Boton>
+                    <Boton size="icono" onClick={() => onPassword(user)} aria-label={`Contraseña de ${user.full_name}`} title="Cambiar contraseña">
+                      <KeyRound className="size-4" aria-hidden="true" />
+                    </Boton>
+                    {user.is_locked && (
+                      <Boton size="icono" onClick={() => onUnlock(user)} aria-label={`Desbloquear a ${user.full_name}`} title="Desbloquear cuenta">
+                        <LockOpen className="size-4" aria-hidden="true" />
+                      </Boton>
+                    )}
                     {!isSelf && (
                       <Boton
                         size="sm"

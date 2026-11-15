@@ -6,7 +6,7 @@
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { listBranches } from '../../src/servicios/sucursales';
-import { createUser, listUsers, updateUser } from '../../src/servicios/usuarios';
+import { createUser, listUsers, resetUserPassword, setUserBranches, unlockUser, updateUser } from '../../src/servicios/usuarios';
 import { installFakeApi } from '../ayudas/apiFalsa';
 
 describe('servicios de usuarios', () => {
@@ -40,6 +40,28 @@ describe('servicios de usuarios', () => {
     const received = installFakeApi(() => ({ status: 200, data: { data: { id: 'u9' } } }));
     await updateUser('u9', { is_active: false });
     expect(received[0]).toMatchObject({ method: 'patch', url: '/usuarios/u9', body: { is_active: false } });
+  });
+
+  it('setUserBranches hace PUT a /usuarios/:id/sucursales con la lista completa', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: { id: 'u9' } } }));
+    await setUserBranches('u9', { branch_ids: ['a', 'b'], default_branch_id: 'b' });
+    expect(received[0]).toMatchObject({
+      method: 'put',
+      url: '/usuarios/u9/sucursales',
+      body: { branch_ids: ['a', 'b'], default_branch_id: 'b' },
+    });
+  });
+
+  it('unlockUser hace POST a /usuarios/:id/desbloquear y devuelve el usuario', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: { id: 'u9', is_locked: false } } }));
+    expect(await unlockUser('u9')).toEqual({ id: 'u9', is_locked: false });
+    expect(received[0]).toMatchObject({ method: 'post', url: '/usuarios/u9/desbloquear' });
+  });
+
+  it('resetUserPassword hace PUT a /usuarios/:id/contrasena con solo la contraseña', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { success: true } }));
+    await resetUserPassword('u9', 'clave-nueva-1');
+    expect(received[0]).toMatchObject({ method: 'put', url: '/usuarios/u9/contrasena', body: { password: 'clave-nueva-1' } });
   });
 
   it('listBranches pide /sucursales', async () => {

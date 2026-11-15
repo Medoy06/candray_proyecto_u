@@ -14,7 +14,8 @@
 import type { ButtonHTMLAttributes } from 'react';
 
 type Variant = 'primario' | 'secundario' | 'peligro';
-type Size = 'md' | 'sm';
+// "icono": botón cuadrado solo con un icono. Debe llevar aria-label (y title para el cursor).
+type Size = 'md' | 'sm' | 'icono';
 
 const VARIANTS: Record<Variant, string> = {
   primario: 'bg-marca text-white hover:bg-marca-oscuro',
@@ -25,6 +26,7 @@ const VARIANTS: Record<Variant, string> = {
 const SIZES: Record<Size, string> = {
   md: 'px-4 py-2 text-sm',
   sm: 'px-3 py-1.5 text-sm',
+  icono: 'size-8',
 };
 
 interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

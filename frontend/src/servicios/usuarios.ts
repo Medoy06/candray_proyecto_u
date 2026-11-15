@@ -52,6 +52,11 @@ export interface UpdateUserInput {
   is_active?: boolean;
 }
 
+export interface SetUserBranchesInput {
+  branch_ids: string[];
+  default_branch_id?: string;
+}
+
 // GET /api/usuarios — con filtros opcionales. Solo se envían los que tienen valor.
 export async function listUsers(filters: UserFilters = {}): Promise<ManagedUser[]> {
   const params: Record<string, string> = {};
@@ -72,4 +77,21 @@ export async function createUser(input: CreateUserInput): Promise<ManagedUser> {
 export async function updateUser(id: string, input: UpdateUserInput): Promise<ManagedUser> {
   const response = await api.patch<{ data: ManagedUser }>(`/usuarios/${id}`, input);
   return response.data.data;
+}
+
+// PUT /api/usuarios/:id/sucursales — REEMPLAZA las sucursales del usuario por la lista enviada.
+export async function setUserBranches(id: string, input: SetUserBranchesInput): Promise<ManagedUser> {
+  const response = await api.put<{ data: ManagedUser }>(`/usuarios/${id}/sucursales`, input);
+  return response.data.data;
+}
+
+// POST /api/usuarios/:id/desbloquear — quita el bloqueo por intentos fallidos.
+export async function unlockUser(id: string): Promise<ManagedUser> {
+  const response = await api.post<{ data: ManagedUser }>(`/usuarios/${id}/desbloquear`);
+  return response.data.data;
+}
+
+// PUT /api/usuarios/:id/contrasena — asigna una contraseña nueva (y levanta el bloqueo).
+export async function resetUserPassword(id: string, password: string): Promise<void> {
+  await api.put(`/usuarios/${id}/contrasena`, { password });
 }

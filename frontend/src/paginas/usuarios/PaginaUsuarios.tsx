@@ -1,7 +1,8 @@
 // =============================================================================
 // PaginaUsuarios.tsx
 // Qué hace:     la pantalla de administración de usuarios: lista con filtros,
-//               crear, editar y activar/desactivar.
+//               crear, editar, sucursales, contraseña, desbloqueo y
+//               activar/desactivar.
 // Depende de:   ganchos/useUsuarios.ts, useValorConRetraso.ts, useSesion.ts,
 //               componentes/ui y los componentes de esta carpeta.
 // Lo usa:       navegacion/RutasAplicacion.tsx (ruta "usuarios", capacidad
@@ -22,11 +23,13 @@ import type { Role } from '../../configuracion/roles';
 import { useSesion } from '../../ganchos/useSesion';
 import { useUsuarios } from '../../ganchos/useUsuarios';
 import { useValorConRetraso } from '../../ganchos/useValorConRetraso';
-import { updateUser, type ManagedUser } from '../../servicios/usuarios';
+import { unlockUser, updateUser, type ManagedUser } from '../../servicios/usuarios';
 import { getApiErrorMessage } from '../../utilidades/errorApi';
 import { FiltrosUsuarios, type UserFilterValues } from './FiltrosUsuarios';
+import { FormularioContrasenaUsuario } from './FormularioContrasenaUsuario';
 import { FormularioCrearUsuario } from './FormularioCrearUsuario';
 import { FormularioEditarUsuario } from './FormularioEditarUsuario';
+import { FormularioSucursalesUsuario } from './FormularioSucursalesUsuario';
 import { TablaUsuarios } from './TablaUsuarios';
 
 const SEARCH_DELAY_MS = 300;
@@ -37,6 +40,9 @@ export function PaginaUsuarios() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ManagedUser | null>(null);
   const [toggling, setToggling] = useState<ManagedUser | null>(null);
+  const [branchesFor, setBranchesFor] = useState<ManagedUser | null>(null);
+  const [passwordFor, setPasswordFor] = useState<ManagedUser | null>(null);
+  const [unlocking, setUnlocking] = useState<ManagedUser | null>(null);
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');
 
@@ -53,6 +59,8 @@ export function PaginaUsuarios() {
   function finish(message: string) {
     setCreating(false);
     setEditing(null);
+    setBranchesFor(null);
+    setPasswordFor(null);
     setActionError('');
     setNotice(message);
     reload();
@@ -69,6 +77,26 @@ export function PaginaUsuarios() {
     } catch (toggleError: unknown) {
       setActionError(getApiErrorMessage(toggleError, 'No se pudo cambiar el estado del usuario.'));
     }
+  }
+
+  async function confirmUnlock() {
+    const target = unlocking;
+    if (target === null) return;
+    setUnlocking(null);
+    setNotice('');
+    try {
+      await unlockUser(target.id);
+      finish(`La cuenta de ${target.full_name} fue desbloqueada.`);
+    } catch (unlockError: unknown) {
+      setActionError(getApiErrorMessage(unlockError, 'No se pudo desbloquear la cuenta.'));
+    }
+  }
+
+  // Abre una ventana limpiando los avisos anteriores.
+  function open<T>(setter: (value: T) => void, value: T) {
+    setNotice('');
+    setActionError('');
+    setter(value);
   }
 
   return (
@@ -120,11 +148,10 @@ export function PaginaUsuarios() {
         <TablaUsuarios
           users={users}
           currentUserId={currentUser.id}
-          onEdit={(user) => {
-            setNotice('');
-            setActionError('');
-            setEditing(user);
-          }}
+          onEdit={(user) => open(setEditing, user)}
+          onBranches={(user) => open(setBranchesFor, user)}
+          onPassword={(user) => open(setPasswordFor, user)}
+          onUnlock={(user) => open(setUnlocking, user)}
           onToggleActive={setToggling}
         />
       )}
@@ -143,6 +170,28 @@ export function PaginaUsuarios() {
           onSaved={(saved) => finish(`Cambios guardados para ${saved.full_name}.`)}
         />
       )}
+      {branchesFor !== null && (
+        <FormularioSucursalesUsuario
+          user={branchesFor}
+          onClose={() => setBranchesFor(null)}
+          onSaved={(saved) => finish(`Sucursales actualizadas para ${saved.full_name}.`)}
+        />
+      )}
+      {passwordFor !== null && (
+        <FormularioContrasenaUsuario
+          user={passwordFor}
+          onClose={() => setPasswordFor(null)}
+          onSaved={() => finish(`Contraseña de ${passwordFor.full_name} actualizada.`)}
+        />
+      )}
+      <ConfirmDialog
+        isOpen={unlocking !== null}
+        title="Desbloquear cuenta"
+        message={`${unlocking?.full_name ?? ''} podrá volver a intentar iniciar sesión de inmediato.`}
+        confirmLabel="Desbloquear"
+        onConfirm={() => void confirmUnlock()}
+        onCancel={() => setUnlocking(null)}
+      />
       <ConfirmDialog
         isOpen={toggling !== null}
         title={toggling?.is_active ? 'Desactivar usuario' : 'Activar usuario'}

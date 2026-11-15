@@ -26,3 +26,19 @@ export function toggleBranch(selection: BranchSelection, id: string): BranchSele
 export function setDefaultBranch(selection: BranchSelection, id: string): BranchSelection {
   return selection.ids.includes(id) ? { ...selection, defaultId: id } : selection;
 }
+
+// La selección con la que arranca el formulario de un usuario que ya tiene sucursales.
+// El servidor entrega las sucursales con la predeterminada primero y marcada.
+export function selectionFromBranches(branches: { id: string; is_default: boolean }[]): BranchSelection {
+  return {
+    ids: branches.map((branch) => branch.id),
+    defaultId: branches.find((branch) => branch.is_default)?.id ?? branches[0]?.id ?? null,
+  };
+}
+
+// ¿Son iguales dos selecciones? El orden de marcado no importa; sí la predeterminada.
+export function sameSelection(a: BranchSelection, b: BranchSelection): boolean {
+  return (
+    a.defaultId === b.defaultId && a.ids.length === b.ids.length && a.ids.every((id) => b.ids.includes(id))
+  );
+}

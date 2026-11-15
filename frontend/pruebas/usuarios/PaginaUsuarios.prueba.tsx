@@ -4,62 +4,21 @@
 //               lista, filtros, errores y reintento, crear (validación y error
 //               del servidor), editar (solo lo cambiado), y activar/desactivar
 //               con confirmación.
-// Cómo:         cliente real + ayudas/apiFalsa.ts; la sesión es la de
-//               ayudas/conSesion.tsx (usuario actual con id "u1").
+// Cómo:         cliente real + ayudas/apiFalsa.ts; los datos y el servidor de
+//               ejemplo están en ayudas/datosUsuarios.ts (usuario actual "u1").
 // =============================================================================
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { PaginaUsuarios } from '../../src/paginas/usuarios/PaginaUsuarios';
 import type { ManagedUser } from '../../src/servicios/usuarios';
-import { installFakeApi, type RecordedRequest } from '../ayudas/apiFalsa';
-import { renderConSesion } from '../ayudas/conSesion';
+import { installFakeApi } from '../ayudas/apiFalsa';
 import { CENTRAL, ESCALON } from '../ayudas/datosSesion';
+import { DOCTOR, LOCKED, mount, row, server, usersGets } from '../ayudas/datosUsuarios';
 
-const branchOf = (b: typeof CENTRAL, isDefault = true) => ({ id: b.id, code: b.code, name: b.name, is_default: isDefault });
-
-const SELF: ManagedUser = {
-  id: 'u1', full_name: 'Alejandro Mejía', email: 'dr.mejia@candray.test', role: 'admin', is_active: true,
-  last_login: '2026-11-10 08:30:00', created_at: '2026-01-01 00:00:00', is_locked: false, branches: [],
-};
-const DOCTOR: ManagedUser = {
-  id: 'u2', full_name: 'Marta Doctora', email: 'marta@candray.test', role: 'doctor', is_active: true,
-  last_login: null, created_at: '2026-01-01 00:00:00', is_locked: false,
-  branches: [branchOf(CENTRAL), branchOf(ESCALON, false)],
-};
-const LOCKED: ManagedUser = {
-  id: 'u3', full_name: 'Raúl Recepción', email: 'raul@candray.test', role: 'recepcionista', is_active: false,
-  last_login: null, created_at: '2026-01-01 00:00:00', is_locked: true, branches: [],
-};
-
-const BRANCHES = [
-  { ...CENTRAL, address: null, phone: null, is_active: true, created_at: '', user_count: 1 },
-  { ...ESCALON, address: null, phone: null, is_active: true, created_at: '', user_count: 0 },
-  { ...ESCALON, id: '33333333-3333-4333-8333-333333333333', name: 'Metrosur', code: 'METROSUR', is_active: false, created_at: '', user_count: 0 },
-];
-
-// API falsa con un "servidor" simple: lista, sucursales, y respuestas configurables.
-function server(overrides: (request: RecordedRequest) => { status: number; data?: unknown } | undefined = () => undefined) {
-  return installFakeApi((request) => {
-    const custom = overrides(request);
-    if (custom !== undefined) return custom;
-    if (request.method === 'get' && request.url === '/usuarios') return { status: 200, data: { data: [SELF, DOCTOR, LOCKED] } };
-    if (request.method === 'get' && request.url === '/sucursales') return { status: 200, data: { data: BRANCHES } };
-    if (request.method === 'post' && request.url === '/usuarios') return { status: 201, data: { data: { ...DOCTOR, id: 'nuevo' } } };
-    if (request.method === 'patch') return { status: 200, data: { data: DOCTOR } };
-    return { status: 404 };
-  });
-}
-
-const mount = () => renderConSesion(<PaginaUsuarios />, { role: 'admin', capabilities: ['users_manage'] });
-const row = (name: string) => screen.getByText(name).closest('tr')!;
-// Campos de la ventana abierta. Se buscan por rol y nombre accesible (sin el asterisco)
-// y SOLO dentro del diálogo: "Rol" también existe en la barra de filtros de la página.
 const dlg = () => within(screen.getByRole('dialog'));
 const nameField = () => dlg().getByRole('textbox', { name: 'Nombre completo' });
 const emailField = () => dlg().getByRole('textbox', { name: 'Correo' });
 const roleField = () => dlg().getByRole('combobox', { name: 'Rol' });
-const usersGets = (received: RecordedRequest[]) => received.filter((r) => r.method === 'get' && r.url === '/usuarios');
 
 describe('PaginaUsuarios — lista', () => {
   it('muestra a los usuarios con rol, sucursales, estado y último acceso', async () => {

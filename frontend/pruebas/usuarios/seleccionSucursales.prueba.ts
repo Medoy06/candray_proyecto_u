@@ -7,6 +7,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   EMPTY_SELECTION,
+  sameSelection,
+  selectionFromBranches,
   setDefaultBranch,
   toggleBranch,
 } from '../../src/paginas/usuarios/seleccionSucursales';
@@ -42,5 +44,30 @@ describe('seleccionSucursales', () => {
   it('setDefaultBranch ignora una sucursal que no está marcada', () => {
     const s = { ids: ['a'], defaultId: 'a' };
     expect(setDefaultBranch(s, 'z')).toBe(s);
+  });
+});
+
+describe('selectionFromBranches y sameSelection', () => {
+  it('toma la predeterminada marcada por el servidor', () => {
+    expect(selectionFromBranches([{ id: 'a', is_default: false }, { id: 'b', is_default: true }])).toEqual({
+      ids: ['a', 'b'],
+      defaultId: 'b',
+    });
+  });
+
+  it('sin ninguna marcada como predeterminada, usa la primera; sin sucursales, ninguna', () => {
+    expect(selectionFromBranches([{ id: 'a', is_default: false }]).defaultId).toBe('a');
+    expect(selectionFromBranches([])).toEqual({ ids: [], defaultId: null });
+  });
+
+  it('dos selecciones con las mismas sucursales en otro orden son iguales', () => {
+    expect(sameSelection({ ids: ['a', 'b'], defaultId: 'a' }, { ids: ['b', 'a'], defaultId: 'a' })).toBe(true);
+  });
+
+  it('cambiar la predeterminada, quitar o agregar una sucursal las hace distintas', () => {
+    const base = { ids: ['a', 'b'], defaultId: 'a' };
+    expect(sameSelection(base, { ids: ['a', 'b'], defaultId: 'b' })).toBe(false);
+    expect(sameSelection(base, { ids: ['a'], defaultId: 'a' })).toBe(false);
+    expect(sameSelection(base, { ids: ['a', 'b', 'c'], defaultId: 'a' })).toBe(false);
   });
 });
