@@ -9,6 +9,7 @@
 import request from 'supertest';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { DEMO_PASSWORD, DEMO_USERS, seedDemo } from '../../../base_datos/semillas/demostracion';
+import { pool } from '../../src/configuracion/baseDatos';
 import { createApp } from '../../src/app';
 
 const app = createApp();
@@ -21,8 +22,10 @@ const login = (email: string) =>
   request(app).post('/api/auth/login').send({ email, password: DEMO_PASSWORD });
 
 describe('Semilla de demostración', () => {
+  let summary: Awaited<ReturnType<typeof seedDemo>>;
+
   beforeAll(async () => {
-    await seedDemo();
+    summary = await seedDemo();
   });
 
   it('crea un usuario por cada rol', () => {
@@ -83,6 +86,67 @@ describe('Semilla de demostración', () => {
     const escalon = response.body.data.branches.find((b: { code: string }) => b.code === 'ESCALON');
     expect(central.theme_color).not.toBe(escalon.theme_color);
     expect(central.has_optical_counter).toBe(true);
+  });
+
+  // Los datos clínicos se consultan por los correos de la semilla, porque la base
+  // de pruebas también tiene datos creados por otras pruebas.
+  describe('datos clínicos', () => {
+    const demoDoctors = `(SELECT id FROM users WHERE email LIKE '%@candray.test' AND role = 'doctor')`;
+
+    it('crea pacientes, horarios y citas', () => {
+      expect(summary.clinical.patients).toBe(10);
+      expect(summary.clinical.schedules).toBeGreaterThan(0);
+      expect(summary.clinical.appointments).toBeGreaterThan(0);
+    });
+
+    it('cada médico de la semilla tiene horario, y el itinerante atiende en dos sucursales', async () => {
+      const result = await pool.query<{ email: string; branches: number }>(
+        `SELECT u.email, count(DISTINCT s.branch_id)::int AS branches
+           FROM doctor_schedules s JOIN users u ON u.id = s.doctor_id
+          WHERE u.email LIKE '%@candray.test'
+          GROUP BY u.email`,
+      );
+      const byEmail = Object.fromEntries(result.rows.map((row) => [row.email, row.branches]));
+      expect(byEmail).toEqual({
+        'dr.mejia@candray.test': 2,
+        'dra.rivas@candray.test': 1,
+        'dr.portillo@candray.test': 1,
+      });
+    });
+
+    it('hay citas pasadas y próximas, y de todos los estados', async () => {
+      const result = await pool.query<{ past: number; upcoming: number; statuses: string[] }>(
+        `SELECT count(*) FILTER (WHERE starts_at < now() AT TIME ZONE 'America/El_Salvador' - interval '1 day')::int AS past,
+                count(*) FILTER (WHERE starts_at >= (now() AT TIME ZONE 'America/El_Salvador')::date)::int AS upcoming,
+                array_agg(DISTINCT status::text ORDER BY status::text) AS statuses
+           FROM appointments WHERE doctor_id IN ${demoDoctors}`,
+      );
+      expect(result.rows[0].past).toBeGreaterThan(0);
+      expect(result.rows[0].upcoming).toBeGreaterThan(0);
+      expect(result.rows[0].statuses).toEqual(['cancelled', 'completed', 'no_show', 'scheduled']);
+    });
+
+    it('las citas caen siempre en días hábiles, dentro del horario del médico en esa sucursal', async () => {
+      const outside = await pool.query(
+        `SELECT a.id
+           FROM appointments a
+          WHERE a.doctor_id IN ${demoDoctors}
+            AND NOT EXISTS (
+              SELECT 1 FROM doctor_schedules s
+               WHERE s.doctor_id = a.doctor_id AND s.branch_id = a.branch_id
+                 AND s.weekday = extract(isodow FROM a.starts_at)
+                 AND a.starts_at::time >= s.start_time AND a.ends_at::time <= s.end_time)`,
+      );
+      expect(outside.rows).toEqual([]);
+    });
+
+    it('las citas canceladas traen su motivo y las demás no', async () => {
+      const result = await pool.query<{ ok: boolean }>(
+        `SELECT bool_and((status = 'cancelled') = (cancellation_reason IS NOT NULL)) AS ok
+           FROM appointments WHERE doctor_id IN ${demoDoctors}`,
+      );
+      expect(result.rows[0].ok).toBe(true);
+    });
   });
 
   it('una segunda siembra sobre la misma base se rechaza', async () => {

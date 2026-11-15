@@ -37,7 +37,11 @@ async function resetDemo(): Promise<void> {
   await applyMigrations();
 
   const summary = await seedDemo();
-  console.log(`\nSemilla: ${summary.branches} sucursales y ${summary.users} usuarios.\n`);
+  const { clinical } = summary;
+  console.log(`\nSemilla: ${summary.branches} sucursales y ${summary.users} usuarios.`);
+  console.log(
+    `         ${clinical.patients} pacientes, ${clinical.schedules} bloques de horario y ${clinical.appointments} citas.\n`,
+  );
 
   console.log(`Usuarios de demostración (contraseña de todos: ${DEMO_PASSWORD})`);
   for (const user of DEMO_USERS) {

@@ -2,7 +2,8 @@
 // demostracion.ts (semilla)
 // Qué hace:     inserta los datos FICTICIOS de demostración del Incremento 0:
 //               las sucursales y un usuario por cada rol (más algunos extra
-//               para mostrar el cambio de sucursal y al médico itinerante).
+//               para mostrar el cambio de sucursal y al médico itinerante),
+//               y al final los datos clínicos (demostracionClinica.ts).
 // Requerimiento: demostración reproducible (sección 11 del documento de diseño).
 // Depende de:   backend/src/configuracion/baseDatos.ts y modelos/usuarios.ts.
 // Lo usan:      scripts/reiniciar_demo.ts y las pruebas de la semilla.
@@ -20,6 +21,7 @@
 import { pool } from '../../backend/src/configuracion/baseDatos';
 import type { Role } from '../../backend/src/configuracion/roles';
 import { createUser } from '../../backend/src/modelos/usuarios';
+import { seedClinicalDemo, type ClinicalSummary } from './demostracionClinica';
 
 // Contraseña de TODOS los usuarios de demostración. Es pública a propósito
 // (aparece en la documentación): solo sirve en la base de demostración.
@@ -101,10 +103,11 @@ export const DEMO_USERS: DemoUser[] = [
 export interface SeedSummary {
   branches: number;
   users: number;
+  clinical: ClinicalSummary;
 }
 
 // Siembra las sucursales y los usuarios de demostración.
-// Devuelve: cuántas sucursales y usuarios se crearon.
+// Devuelve: cuántas sucursales, usuarios, pacientes, horarios y citas se crearon.
 // Lanza error: si ya existen usuarios de demostración.
 export async function seedDemo(): Promise<SeedSummary> {
   const existing = await pool.query<{ n: number }>(
@@ -135,6 +138,7 @@ export async function seedDemo(): Promise<SeedSummary> {
   }
 
   // 2) Usuarios y sus sucursales (la primera de la lista es la predeterminada).
+  const userIds = new Map<string, string>();
   for (const demoUser of DEMO_USERS) {
     const user = await createUser({
       full_name: demoUser.full_name,
@@ -142,6 +146,7 @@ export async function seedDemo(): Promise<SeedSummary> {
       password: DEMO_PASSWORD,
       role: demoUser.role,
     });
+    userIds.set(demoUser.email, user.id);
     for (const [index, code] of demoUser.branchCodes.entries()) {
       await pool.query(
         'INSERT INTO user_branches (user_id, branch_id, is_default) VALUES ($1, $2, $3)',
@@ -150,5 +155,8 @@ export async function seedDemo(): Promise<SeedSummary> {
     }
   }
 
-  return { branches: DEMO_BRANCHES.length, users: DEMO_USERS.length };
+  // 3) Pacientes, horarios de los médicos y citas.
+  const clinical = await seedClinicalDemo(branchIds, userIds);
+
+  return { branches: DEMO_BRANCHES.length, users: DEMO_USERS.length, clinical };
 }
