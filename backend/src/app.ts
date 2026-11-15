@@ -20,6 +20,7 @@ import { JSON_BODY_LIMIT } from './configuracion/negocio';
 import { errorHandler } from './intermediarios/errores';
 import auditRoutes from './rutas/auditoria';
 import authRoutes from './rutas/autenticacion';
+import appointmentRoutes from './rutas/citas';
 import availabilityRoutes from './rutas/disponibilidad';
 import scheduleRoutes from './rutas/horarios';
 import patientRoutes from './rutas/pacientes';
@@ -95,6 +96,7 @@ export function createApp(options: AppOptions = {}): Express {
   app.use('/api/pacientes', patientRoutes);
   app.use('/api/horarios', scheduleRoutes);
   app.use('/api/disponibilidad', availabilityRoutes);
+  app.use('/api/citas', appointmentRoutes);
   app.use('/api/auditoria', auditRoutes);
 
   // Comprobación de que el servidor está vivo.

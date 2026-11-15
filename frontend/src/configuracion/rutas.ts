@@ -18,7 +18,7 @@
 // IMPORTANTE: ocultar una opción del menú NO es seguridad. Quien realmente
 // autoriza cada acción es el backend; esto solo evita mostrar lo que daría error.
 // =============================================================================
-import { Building2, House, ScrollText, Users, type LucideIcon } from 'lucide-react';
+import { Building2, House, ScrollText, UserRound, Users, type LucideIcon } from 'lucide-react';
 import type { Capability } from './capacidades';
 
 // Secciones del menú, en el orden en que se muestran. Una sección sin opciones
@@ -53,6 +53,15 @@ export const ROUTES = [
     section: 'general',
     icon: House,
     capability: null,
+  },
+  {
+    id: 'pacientes',
+    path: '/pacientes',
+    label: 'Pacientes',
+    description: 'Buscar pacientes y mantener sus datos.',
+    section: 'clinico',
+    icon: UserRound,
+    capability: 'patients_search',
   },
   {
     id: 'usuarios',

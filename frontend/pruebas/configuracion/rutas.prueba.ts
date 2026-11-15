@@ -60,6 +60,13 @@ describe('visibleSections', () => {
     expect(labelsOf(['audit_read'])).toEqual(['Inicio', 'Auditoría']);
   });
 
+  it('Pacientes lo ve quien puede buscar pacientes, en la sección Clínico', () => {
+    expect(labelsOf(['patients_search'])).toEqual(['Inicio', 'Pacientes']);
+    expect(labelsOf(['patients_manage'])).toEqual(['Inicio']); // modificar sin poder buscar no abre la pantalla
+    const clinico = visibleSections(canWith(['patients_search'])).find((section) => section.key === 'clinico');
+    expect(clinico?.routes.map((route) => route.path)).toEqual(['/pacientes']);
+  });
+
   it('con todas las capacidades ve todas las pantallas', () => {
     expect(labelsOf([...CAPABILITIES])).toEqual(ROUTES.map((route) => route.label));
   });

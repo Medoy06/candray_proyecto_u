@@ -18,11 +18,13 @@ import { ROUTES, type RouteId } from '../configuracion/rutas';
 import { PaginaNoEncontrada } from '../paginas/comunes/PaginaNoEncontrada';
 import { PaginaAuditoria } from '../paginas/auditoria/PaginaAuditoria';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
+import { PaginaPacientes } from '../paginas/pacientes/PaginaPacientes';
 import { PaginaSucursales } from '../paginas/sucursales/PaginaSucursales';
 import { PaginaUsuarios } from '../paginas/usuarios/PaginaUsuarios';
 
 const PAGES: Record<RouteId, ComponentType> = {
   inicio: PaginaInicio,
+  pacientes: PaginaPacientes,
   usuarios: PaginaUsuarios,
   sucursales: PaginaSucursales,
   auditoria: PaginaAuditoria,

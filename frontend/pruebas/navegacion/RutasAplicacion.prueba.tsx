@@ -51,7 +51,19 @@ describe('RutasAplicacion', () => {
     await screen.findByText(/No hay usuarios que coincidan/); // deja terminar la carga
   });
 
-  it.each(['/usuarios', '/sucursales', '/auditoria'])(
+  it('/pacientes abre la página real de pacientes, no el aviso de construcción', async () => {
+    installFakeApi((request) =>
+      request.url === '/pacientes'
+        ? { status: 200, data: { data: [], pagination: { page: 1, page_size: 25, total: 0, total_pages: 0 } } }
+        : { status: 404 },
+    );
+    renderConSesion(<RutasAplicacion />, { route: '/pacientes', capabilities: ['patients_search'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Pacientes' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText(/Todavía no hay pacientes registrados/); // deja terminar la carga
+  });
+
+  it.each(['/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
     'sin la capacidad, %s muestra "Sin acceso" y NO la pantalla',
     (path) => {
       renderConSesion(<RutasAplicacion />, { route: path, capabilities: [] });
