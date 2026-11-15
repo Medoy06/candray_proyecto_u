@@ -1,10 +1,11 @@
 // =============================================================================
 // demostracionClinica.ts (semilla)
 // Qué hace:     inserta los datos FICTICIOS clínicos de la demostración:
-//               pacientes, horarios semanales de los médicos y citas.
+//               pacientes, horarios semanales de los médicos, citas, notas del
+//               expediente (con una enmienda) y una interconsulta.
 // Requerimiento: demostración reproducible (sección 11 del documento de diseño).
 // Depende de:   backend/src/configuracion/baseDatos.ts y de las tablas creadas
-//               por las migraciones 03, 04 y 05.
+//               por las migraciones 03, 04, 05, 06 y 07.
 // Lo usa:       demostracion.ts (seedDemo), después de crear sucursales y usuarios.
 //
 // Las citas se generan RELATIVAS A HOY: así la agenda siempre tiene citas
@@ -64,6 +65,16 @@ const REASONS = [
   'Revisión de graduación', 'Molestia en los ojos', 'Primera consulta',
 ];
 
+// Notas del expediente de la demostración. Se reparten entre las citas atendidas.
+const DEMO_DIAGNOSES = [
+  { diagnosis: 'Miopía leve en ambos ojos', treatment: 'Lentes con la graduación indicada', notes: 'Usar los lentes de forma permanente. Control en 6 meses.' },
+  { diagnosis: 'Astigmatismo', treatment: 'Lentes con corrección cilíndrica', notes: 'Se explicó al paciente la adaptación a los lentes nuevos.' },
+  { diagnosis: 'Ojo seco', treatment: 'Lágrimas artificiales cada 8 horas', notes: 'Reducir el tiempo continuo frente a pantallas y descansar la vista.' },
+  { diagnosis: 'Presbicia', treatment: 'Lentes para lectura', notes: 'Primera vez que necesita corrección para visión cercana.' },
+  { diagnosis: 'Conjuntivitis alérgica', treatment: 'Gotas antihistamínicas por 7 días', notes: 'Volver si los síntomas no mejoran en una semana.' },
+  { diagnosis: 'Examen normal', treatment: null, notes: 'Sin hallazgos. Control anual.' },
+];
+
 // Cuántas citas se generan al inicio de cada bloque, por día. Así la agenda se
 // ve ocupada al principio y con espacios libres después, para poder agendar.
 const APPOINTMENTS_PER_BLOCK = 3;
@@ -74,6 +85,8 @@ export interface ClinicalSummary {
   patients: number;
   schedules: number;
   appointments: number;
+  medicalRecords: number; // notas del expediente (incluye la enmienda de ejemplo)
+  referrals: number;      // interconsultas de ejemplo
 }
 
 // Día de la semana ISO (1 = lunes ... 7 = domingo) de una fecha 'AAAA-MM-DD'.
@@ -148,6 +161,7 @@ export async function seedClinicalDemo(
   const futureDays = candidates.filter((day) => day >= today && businessDay(day)).slice(0, FUTURE_BUSINESS_DAYS);
 
   let appointmentCount = 0;
+  const attended: Array<{ id: string; patientId: string; doctorId: string; branchId: string }> = [];
   let turn = 0; // se avanza con cada cita para rotar pacientes y estados
   for (const day of [...pastDays, ...futureDays]) {
     const isPast = day < today;
@@ -159,16 +173,20 @@ export async function seedClinicalDemo(
         const status = isPast
           ? (['completed', 'completed', 'no_show', 'cancelled'] as const)[turn % 4]
           : turn % 7 === 6 ? 'cancelled' : 'scheduled';
-        await pool.query(
+        const patientId = patientIds[turn % patientIds.length];
+        const doctorId = idOf(userIds, block.doctorEmail);
+        const branchId = idOf(branchIds, block.branchCode);
+        const inserted = await pool.query<{ id: string }>(
           `INSERT INTO appointments
              (patient_id, doctor_id, branch_id, starts_at, ends_at, status,
               reason, cancellation_reason, created_by)
            VALUES ($1, $2, $3, $4::timestamp, $4::timestamp + interval '30 minutes',
-                   $5, $6, $7, $8)`,
+                   $5, $6, $7, $8)
+           RETURNING id`,
           [
-            patientIds[turn % patientIds.length],
-            idOf(userIds, block.doctorEmail),
-            idOf(branchIds, block.branchCode),
+            patientId,
+            doctorId,
+            branchId,
             `${day} ${time}`,
             status,
             REASONS[turn % REASONS.length],
@@ -176,11 +194,73 @@ export async function seedClinicalDemo(
             idOf(userIds, RECEPTIONIST_BY_BRANCH[block.branchCode]),
           ],
         );
+        if (status === 'completed') attended.push({ id: inserted.rows[0].id, patientId, doctorId, branchId });
         appointmentCount += 1;
         turn += 1;
       }
     }
   }
 
-  return { patients: patientIds.length, schedules: scheduleCount, appointments: appointmentCount };
+  // 4) Expediente: una nota por cada cita atendida (las notas dependen de una
+  //    consulta, así que solo existen para citas ya realizadas).
+  let recordCount = 0;
+  const firstNotes: string[] = [];
+  for (const [index, visit] of attended.entries()) {
+    const entry = DEMO_DIAGNOSES[index % DEMO_DIAGNOSES.length];
+    const note = await pool.query<{ id: string }>(
+      `INSERT INTO medical_records
+         (patient_id, doctor_id, branch_id, appointment_id, diagnosis, treatment, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id`,
+      [visit.patientId, visit.doctorId, visit.branchId, visit.id, entry.diagnosis, entry.treatment, entry.notes],
+    );
+    firstNotes.push(note.rows[0].id);
+    recordCount += 1;
+  }
+
+  // Una enmienda de ejemplo: muestra cómo se ve una corrección en el historial.
+  if (attended.length > 0) {
+    const first = attended[0];
+    await pool.query(
+      `INSERT INTO medical_records (patient_id, doctor_id, branch_id, amends_id, diagnosis, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        first.patientId, first.doctorId, first.branchId, firstNotes[0],
+        'Miopía leve en ambos ojos (corregido: predomina en el ojo izquierdo)',
+        'Corrección de la nota anterior: se precisó el ojo más afectado.',
+      ],
+    );
+    recordCount += 1;
+  }
+
+  // 5) Una interconsulta de ejemplo: la Dra. Rivas le da acceso a un paciente
+  //    suyo al Dr. Portillo, que todavía no lo ha atendido.
+  const rivasId = idOf(userIds, 'dra.rivas@candray.test');
+  const portilloId = idOf(userIds, 'dr.portillo@candray.test');
+  const candidate = await pool.query<{ patient_id: string }>(
+    `SELECT DISTINCT a.patient_id
+       FROM appointments a
+      WHERE a.doctor_id = $1 AND a.status <> 'cancelled'
+        AND NOT EXISTS (SELECT 1 FROM appointments b
+                         WHERE b.patient_id = a.patient_id AND b.doctor_id = $2 AND b.status <> 'cancelled')
+      LIMIT 1`,
+    [rivasId, portilloId],
+  );
+  let referralCount = 0;
+  if (candidate.rows.length > 0) {
+    await pool.query(
+      `INSERT INTO referrals (patient_id, provider_id, granted_by, reason, expires_at)
+       VALUES ($1, $2, $3, $4, (now() AT TIME ZONE 'America/El_Salvador') + interval '14 days')`,
+      [candidate.rows[0].patient_id, portilloId, rivasId, 'Segunda opinión sobre el tratamiento'],
+    );
+    referralCount = 1;
+  }
+
+  return {
+    patients: patientIds.length,
+    schedules: scheduleCount,
+    appointments: appointmentCount,
+    medicalRecords: recordCount,
+    referrals: referralCount,
+  };
 }

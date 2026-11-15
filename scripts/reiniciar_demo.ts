@@ -40,7 +40,8 @@ async function resetDemo(): Promise<void> {
   const { clinical } = summary;
   console.log(`\nSemilla: ${summary.branches} sucursales y ${summary.users} usuarios.`);
   console.log(
-    `         ${clinical.patients} pacientes, ${clinical.schedules} bloques de horario y ${clinical.appointments} citas.\n`,
+    `         ${clinical.patients} pacientes, ${clinical.schedules} bloques de horario, ${clinical.appointments} citas,\n` +
+    `         ${clinical.medicalRecords} notas de expediente y ${clinical.referrals} interconsulta.\n`,
   );
 
   console.log(`Usuarios de demostración (contraseña de todos: ${DEMO_PASSWORD})`);

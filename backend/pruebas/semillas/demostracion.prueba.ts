@@ -149,6 +149,45 @@ describe('Semilla de demostración', () => {
     });
   });
 
+  describe('expediente e interconsulta', () => {
+    const demoDoctors = `(SELECT id FROM users WHERE email LIKE '%@candray.test' AND role = 'doctor')`;
+
+    it('cada cita atendida tiene su nota original, y solo esas', async () => {
+      const result = await pool.query<{ attended: number; with_note: number; notes_on_other: number }>(
+        `SELECT count(*) FILTER (WHERE a.status = 'completed')::int AS attended,
+                count(*) FILTER (WHERE a.status = 'completed' AND m.id IS NOT NULL)::int AS with_note,
+                count(*) FILTER (WHERE a.status <> 'completed' AND m.id IS NOT NULL)::int AS notes_on_other
+           FROM appointments a LEFT JOIN medical_records m ON m.appointment_id = a.id
+          WHERE a.doctor_id IN ${demoDoctors}`,
+      );
+      expect(result.rows[0].attended).toBeGreaterThan(0);
+      expect(result.rows[0].with_note).toBe(result.rows[0].attended);
+      expect(result.rows[0].notes_on_other).toBe(0);
+    });
+
+    it('hay una enmienda de ejemplo y el resumen cuenta todas las notas', async () => {
+      const result = await pool.query<{ amendments: number; total: number }>(
+        `SELECT count(*) FILTER (WHERE amends_id IS NOT NULL)::int AS amendments, count(*)::int AS total
+           FROM medical_records WHERE doctor_id IN ${demoDoctors}`,
+      );
+      expect(result.rows[0].amendments).toBe(1);
+      expect(result.rows[0].total).toBe(summary.clinical.medicalRecords);
+    });
+
+    it('la interconsulta de ejemplo es a un paciente que el médico receptor aún no atiende, y está vigente', async () => {
+      expect(summary.clinical.referrals).toBe(1);
+      const result = await pool.query<{ attended_by_provider: number; active: boolean }>(
+        `SELECT (SELECT count(*)::int FROM appointments a
+                  WHERE a.patient_id = r.patient_id AND a.doctor_id = r.provider_id AND a.status <> 'cancelled')
+                  AS attended_by_provider,
+                (r.expires_at > now() AT TIME ZONE 'America/El_Salvador' AND r.revoked_at IS NULL) AS active
+           FROM referrals r WHERE r.granted_by IN ${demoDoctors}`,
+      );
+      expect(result.rows).toHaveLength(1);
+      expect(result.rows[0]).toEqual({ attended_by_provider: 0, active: true });
+    });
+  });
+
   it('una segunda siembra sobre la misma base se rechaza', async () => {
     await expect(seedDemo()).rejects.toThrow('usuarios de demostración');
   });

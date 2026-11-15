@@ -86,3 +86,47 @@ export async function insertAppointment(input: AppointmentInput) {
     ],
   );
 }
+
+export interface MedicalRecordInput {
+  patientId: string;
+  doctorId: string;
+  branchId: string;
+  appointmentId?: string | null; // nota original: la cita de la consulta
+  amendsId?: string | null;      // enmienda: la nota que corrige
+  diagnosis?: string;
+  treatment?: string | null;
+  notes?: string | null;
+}
+
+// Inserta una nota del expediente. Si no se indica diagnóstico, usa uno de prueba.
+export async function insertMedicalRecord(input: MedicalRecordInput) {
+  return pool.query<{ id: string }>(
+    `INSERT INTO medical_records
+       (patient_id, doctor_id, branch_id, appointment_id, amends_id, diagnosis, treatment, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING id`,
+    [
+      input.patientId, input.doctorId, input.branchId, input.appointmentId ?? null,
+      input.amendsId ?? null, input.diagnosis ?? 'Miopía leve', input.treatment ?? null, input.notes ?? null,
+    ],
+  );
+}
+
+export interface ReferralInput {
+  patientId: string;
+  providerId: string;
+  grantedBy: string;
+  reason?: string;
+  expiresAt?: string; // 'AAAA-MM-DD HH:MM'; por defecto, dentro de 7 días
+}
+
+// Inserta una interconsulta.
+export async function insertReferral(input: ReferralInput) {
+  return pool.query<{ id: string }>(
+    `INSERT INTO referrals (patient_id, provider_id, granted_by, reason, expires_at)
+     VALUES ($1, $2, $3, $4,
+             COALESCE($5::timestamp, (now() AT TIME ZONE 'America/El_Salvador') + interval '7 days'))
+     RETURNING id`,
+    [input.patientId, input.providerId, input.grantedBy, input.reason ?? 'Segunda opinión', input.expiresAt ?? null],
+  );
+}
