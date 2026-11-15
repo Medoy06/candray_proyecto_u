@@ -18,3 +18,12 @@ export const ROLE_LABELS: Record<Role, string> = {
   encargado_venta: 'Óptica (ventas)',
   directivo: 'Directivo',
 };
+
+// Roles que ven TODAS las sucursales sin tener que tenerlas asignadas. Los demás
+// necesitan al menos una sucursal asignada. Es la misma regla que
+// seesAllBranches() del backend (intermediarios/alcanceSucursal.ts).
+const ROLES_WITH_ALL_BRANCHES: readonly Role[] = ['admin', 'directivo'];
+
+export function seesAllBranches(role: Role): boolean {
+  return ROLES_WITH_ALL_BRANCHES.includes(role);
+}

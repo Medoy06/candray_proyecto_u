@@ -54,6 +54,11 @@ describe('contraste AA (4.5 a 1) de los pares texto / fondo', () => {
     ['marca', 'superficie', 'enlaces rojos en tarjetas'],
     ['marca', 'fondo', 'enlaces rojos sobre el fondo general'],
     ['error-texto', 'error-fondo', 'mensajes de error'],
+    ['marca', 'error-fondo', 'botón de peligro con el cursor encima'],
+    ['exito-texto', 'exito-fondo', 'avisos de éxito y etiqueta "Activo"'],
+    ['aviso-texto', 'aviso-fondo', 'etiqueta "Bloqueado"'],
+    ['info-texto', 'info-fondo', 'etiquetas informativas'],
+    ['neutro-texto', 'neutro-fondo', 'etiqueta "Inactivo"'],
   ];
 
   it.each(PARES)('%s sobre %s (%s)', (text, background) => {

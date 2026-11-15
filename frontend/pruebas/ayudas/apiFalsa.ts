@@ -17,6 +17,7 @@ export interface RecordedRequest {
   method: string;
   url: string;
   headers: Record<string, string>;
+  params: Record<string, unknown> | undefined; // parámetros de la URL (?a=1&b=2)
   body: unknown;
 }
 
@@ -36,6 +37,7 @@ export function installFakeApi(
       headers: Object.fromEntries(
         Object.entries(config.headers.toJSON()).map(([key, value]) => [key.toLowerCase(), String(value)]),
       ),
+      params: config.params,
       body: typeof config.data === 'string' ? JSON.parse(config.data) : config.data,
     };
     received.push(request);

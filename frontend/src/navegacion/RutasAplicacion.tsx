@@ -7,8 +7,8 @@
 // Lo usa:       App.tsx cuando hay sesión.
 //
 // PAGES es un Record<RouteId, ...>: si se agrega una pantalla al mapa y se
-// olvida su página aquí, el compilador marca el error. Cuando el paso 5c cree
-// las páginas reales, solo se reemplazan las tres líneas "en construcción".
+// olvida su página aquí, el compilador marca el error. Las páginas reales
+// (paso 5c) van reemplazando las líneas "en construcción".
 // =============================================================================
 import type { ComponentType } from 'react';
 import { Route, Routes } from 'react-router-dom';
@@ -18,10 +18,11 @@ import { ROUTES, type RouteId } from '../configuracion/rutas';
 import { PaginaEnConstruccion } from '../paginas/comunes/PaginaEnConstruccion';
 import { PaginaNoEncontrada } from '../paginas/comunes/PaginaNoEncontrada';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
+import { PaginaUsuarios } from '../paginas/usuarios/PaginaUsuarios';
 
 const PAGES: Record<RouteId, ComponentType> = {
   inicio: PaginaInicio,
-  usuarios: () => <PaginaEnConstruccion id="usuarios" />,
+  usuarios: PaginaUsuarios,
   sucursales: () => <PaginaEnConstruccion id="sucursales" />,
   auditoria: () => <PaginaEnConstruccion id="auditoria" />,
 };

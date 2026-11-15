@@ -9,6 +9,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { RutasAplicacion } from '../../src/navegacion/RutasAplicacion';
+import { installFakeApi } from '../ayudas/apiFalsa';
 import { renderConSesion } from '../ayudas/conSesion';
 
 describe('RutasAplicacion', () => {
@@ -19,10 +20,19 @@ describe('RutasAplicacion', () => {
     expect(screen.getByRole('main')).toHaveTextContent('Bienvenido');
   });
 
-  it('con la capacidad, la pantalla se abre', () => {
+  it('con la capacidad, la pantalla se abre (las que aún no tienen página muestran "En construcción")', () => {
+    renderConSesion(<RutasAplicacion />, { route: '/sucursales', capabilities: ['branches_manage'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Sucursales' })).toBeInTheDocument();
+    expect(screen.getByText('En construcción')).toBeInTheDocument();
+  });
+
+  it('/usuarios abre la página real de usuarios, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: [] } }));
     renderConSesion(<RutasAplicacion />, { route: '/usuarios', capabilities: ['users_manage'] });
     expect(screen.getByRole('heading', { level: 1, name: 'Usuarios' })).toBeInTheDocument();
-    expect(screen.getByText('En construcción')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Nuevo usuario/ })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText(/No hay usuarios que coincidan/); // deja terminar la carga
   });
 
   it.each(['/usuarios', '/sucursales', '/auditoria'])(

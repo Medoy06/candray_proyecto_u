@@ -16,3 +16,6 @@ export const LOCALE = 'es-SV';
 
 // Zona horaria del negocio (UTC-6, sin horario de verano).
 export const TIME_ZONE = 'America/El_Salvador';
+
+// Longitud mínima de una contraseña. Igual a MIN_PASSWORD_LENGTH del backend.
+export const MIN_PASSWORD_LENGTH = 8;

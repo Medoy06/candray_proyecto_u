@@ -5,9 +5,10 @@
 // Lo usan:      los formularios (inicio de sesión, usuarios, sucursales...).
 //
 // Acepta todas las propiedades normales de <input> (type, value, onChange,
-// autoComplete...). Al enfocarlo, el borde y el anillo usan el color de la marca.
+// autoComplete...). Usa el mismo estilo de campo que FormField (inputClass).
 // =============================================================================
 import { useId, type InputHTMLAttributes } from 'react';
+import { inputClass } from './FormField';
 
 interface CampoTextoProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -22,7 +23,7 @@ export function CampoTexto({ label, className = '', ...inputProps }: CampoTextoP
       </label>
       <input
         id={id}
-        className={`w-full rounded-md border border-borde-fuerte bg-superficie px-3 py-2 text-sm text-texto placeholder:text-texto-suave focus:border-marca focus:outline-none focus:ring-2 focus:ring-marca/30 ${className}`}
+        className={`${inputClass} ${className}`}
         {...inputProps}
       />
     </div>

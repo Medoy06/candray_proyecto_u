@@ -42,6 +42,16 @@
   --color-error-borde: #e3b4b4;
   --color-error-texto: #7a1515;
 
+  /* --- Estados (etiquetas): cada una lleva SIEMPRE su texto, nunca solo color --- */
+  --color-exito-fondo: #e0f0e3;
+  --color-exito-texto: #1f5a2b;
+  --color-aviso-fondo: #fbebcb;
+  --color-aviso-texto: #6b4400;
+  --color-info-fondo: #e3eaee;
+  --color-info-texto: #1f3a4a;
+  --color-neutro-fondo: #ececec;
+  --color-neutro-texto: #4a4a4a;
+
   /* --- Tipografía (se instalan con npm, no dependen de internet) ----------- */
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif; /* tablas y formularios */
   --font-titulo: "Barlow", ui-sans-serif, system-ui, sans-serif;       /* títulos */
