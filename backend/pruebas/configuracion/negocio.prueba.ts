@@ -10,6 +10,8 @@ import {
   CURRENCY,
   DUI_PATTERN,
   MAX_FAILED_LOGIN_ATTEMPTS,
+  REFERRAL_DEFAULT_DAYS,
+  REFERRAL_MAX_DAYS,
   VAT_PERCENT,
 } from '../../src/configuracion/negocio';
 
@@ -22,6 +24,14 @@ describe('constantes acordadas', () => {
   it('el bloqueo de cuenta es de 5 intentos y 15 minutos', () => {
     expect(MAX_FAILED_LOGIN_ATTEMPTS).toBe(5);
     expect(ACCOUNT_LOCK_MINUTES).toBe(15);
+  });
+});
+
+describe('interconsulta', () => {
+  it('dura 14 días si no se indica otra cosa y nunca más de 30', () => {
+    expect(REFERRAL_DEFAULT_DAYS).toBe(14);
+    expect(REFERRAL_MAX_DAYS).toBe(30);
+    expect(REFERRAL_DEFAULT_DAYS).toBeLessThanOrEqual(REFERRAL_MAX_DAYS);
   });
 });
 

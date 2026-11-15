@@ -52,3 +52,10 @@ export const JSON_BODY_LIMIT = '100kb';
 // DUI salvadoreño: 8 dígitos, un guion y 1 dígito de verificación.
 // Ejemplo válido: 01234567-8. Solo se comprueba el formato, no el dígito.
 export const DUI_PATTERN = /^\d{8}-\d$/;
+
+// --- Interconsulta ----------------------------------------------------------
+// Cuántos días dura el acceso que un médico le da a otro si no indica otra
+// cosa, y el máximo que se permite. Un acceso temporal NO debe poder quedar
+// abierto por mucho tiempo: si hace falta más, se da una interconsulta nueva.
+export const REFERRAL_DEFAULT_DAYS = 14;
+export const REFERRAL_MAX_DAYS = 30;
