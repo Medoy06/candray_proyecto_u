@@ -15,6 +15,7 @@
 // Cómo:         supertest sobre createApp(), base candray_test.
 // =============================================================================
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import request from 'supertest';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app';
@@ -538,5 +539,22 @@ describe('abuso de paginación y de límites', () => {
   it('el cuerpo de más de 100 kb se corta con 413 en una ruta autenticada también', async () => {
     const response = await request(app).post('/api/pacientes').set(auth(receptionA.token)).send({ full_name: 'x'.repeat(200 * 1024) });
     expect(response.status).toBe(413);
+  });
+
+  // Aviso de zod GHSA-mrhx-c7xc-m3w5 (decisión 001): un arreglo enorme sin tope agota la memoria.
+  // Aquí el único arreglo (branch_ids) tiene tope de 50 y el cuerpo está limitado a 100 kb.
+  it('un arreglo enorme de sucursales se rechaza con 400 sin tumbar el servidor', async () => {
+    // 2 000 ids caben en menos de 100 kb (cada uno ocupa unos 40 caracteres): pasa el límite del cuerpo
+    // y lo detiene el tope de 50 del esquema.
+    // Ids distintos: así la regla de "sin repetidos" no puede ser la que lo detenga.
+    const ids = Array.from({ length: 2000 }, () => randomUUID());
+    const response = await request(app).post('/api/usuarios').set(auth(admin.token)).send({
+      full_name: 'Arreglo Enorme', email: `enorme.${Date.now()}@candray.test`, password: 'clave-segura-1',
+      role: 'recepcionista', branch_ids: ids,
+    });
+    expect(response.status).toBe(400);
+    expect(JSON.stringify(response.body)).toMatch(/branch_ids/);
+    // El servidor sigue respondiendo.
+    expect((await request(app).get('/api/auth/me').set(auth(admin.token))).status).toBeLessThan(500);
   });
 });

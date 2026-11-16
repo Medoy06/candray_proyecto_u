@@ -8,9 +8,6 @@ build/
 .env.*
 !.env.example
 
-# Copia de referencia de Hospital Mio: se borra al terminar el Incremento 0
-_origen/
-
 # Registros y archivos del sistema
 *.log
 .DS_Store
