@@ -19,6 +19,7 @@ describe('actionLabel y entityLabel', () => {
 
   it('traducen las acciones del expediente y de las interconsultas', () => {
     expect(actionLabel('record_viewed')).toBe('Expediente consultado');
+    expect(actionLabel('record_printed')).toBe('Expediente impreso');
     expect(actionLabel('record_access_denied')).toBe('Acceso al expediente denegado');
     expect(actionLabel('record_created')).toBe('Nota de expediente escrita');
     expect(actionLabel('record_amended')).toBe('Nota de expediente enmendada');

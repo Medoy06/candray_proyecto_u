@@ -15,17 +15,22 @@ import { EncabezadoApp } from './EncabezadoApp';
 
 export function Estructura() {
   return (
-    <div className="flex h-screen flex-col bg-fondo">
+    <div className="flex h-screen flex-col bg-fondo print:block print:h-auto">
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 focus:rounded-md focus:bg-superficie focus:px-3 focus:py-2 focus:text-sm focus:text-titulo"
       >
         Saltar al contenido
       </a>
-      <EncabezadoApp />
-      <div className="flex min-h-0 flex-1">
-        <BarraLateral />
-        <main id="contenido" tabIndex={-1} className="min-w-0 flex-1 overflow-auto p-6 focus:outline-none">
+      {/* Al imprimir solo sale el contenido: sin encabezado ni menú. */}
+      <div className="print:hidden">
+        <EncabezadoApp />
+      </div>
+      <div className="flex min-h-0 flex-1 print:block">
+        <div className="flex print:hidden">
+          <BarraLateral />
+        </div>
+        <main id="contenido" tabIndex={-1} className="min-w-0 flex-1 overflow-auto p-6 focus:outline-none print:overflow-visible print:p-0">
           <Outlet />
         </main>
       </div>

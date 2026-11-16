@@ -10,6 +10,7 @@ import {
   CURRENCY,
   DUI_PATTERN,
   MAX_FAILED_LOGIN_ATTEMPTS,
+  RECORD_PRINT_MAX_ENTRIES,
   REFERRAL_DEFAULT_DAYS,
   REFERRAL_MAX_DAYS,
   VAT_PERCENT,
@@ -32,6 +33,12 @@ describe('interconsulta', () => {
     expect(REFERRAL_DEFAULT_DAYS).toBe(14);
     expect(REFERRAL_MAX_DAYS).toBe(30);
     expect(REFERRAL_DEFAULT_DAYS).toBeLessThanOrEqual(REFERRAL_MAX_DAYS);
+  });
+});
+
+describe('impresión del expediente', () => {
+  it('trae como máximo 500 entradas', () => {
+    expect(RECORD_PRINT_MAX_ENTRIES).toBe(500);
   });
 });
 

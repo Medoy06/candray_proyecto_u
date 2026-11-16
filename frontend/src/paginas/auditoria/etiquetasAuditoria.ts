@@ -23,6 +23,7 @@ const ACTION_LABELS: Record<string, string> = {
   branch_created: 'Sucursal creada',
   branch_updated: 'Sucursal modificada',
   record_viewed: 'Expediente consultado',
+  record_printed: 'Expediente impreso',
   record_access_denied: 'Acceso al expediente denegado',
   record_created: 'Nota de expediente escrita',
   record_amended: 'Nota de expediente enmendada',

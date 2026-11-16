@@ -8,7 +8,7 @@
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import * as expedientes from '../../src/servicios/expedientes';
-import { amendNote, createNote, listPendingConsultations, listRecords, RECORD_PAGE_SIZE } from '../../src/servicios/expedientes';
+import { amendNote, createNote, getRecordPrintout, listPendingConsultations, listRecords, RECORD_PAGE_SIZE } from '../../src/servicios/expedientes';
 import { installFakeApi } from '../ayudas/apiFalsa';
 
 const PAGINATION = { page: 2, page_size: 20, total: 30, total_pages: 2 };
@@ -42,6 +42,14 @@ describe('listPendingConsultations', () => {
   });
 });
 
+describe('getRecordPrintout', () => {
+  it('pide el expediente para imprimir y devuelve filas, total y si se recortó', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: [{ id: 'r1' }], total: 600, truncated: true } }));
+    expect(await getRecordPrintout('p1')).toEqual({ rows: [{ id: 'r1' }], total: 600, truncated: true });
+    expect(received[0]).toMatchObject({ method: 'get', url: '/pacientes/p1/expediente/impresion' });
+  });
+});
+
 describe('createNote y amendNote', () => {
   it('createNote hace POST a la ruta del expediente con el cuerpo y devuelve la entrada', async () => {
     const received = installFakeApi(() => ({ status: 201, data: { data: { id: 'n1' } } }));
@@ -66,6 +74,6 @@ describe('createNote y amendNote', () => {
 describe('lo escrito no se edita ni se borra', () => {
   it('el servicio no ofrece ninguna función para editar o borrar una nota', () => {
     const functions = Object.keys(expedientes).filter((key) => typeof (expedientes as Record<string, unknown>)[key] === 'function');
-    expect(functions.sort()).toEqual(['amendNote', 'createNote', 'listPendingConsultations', 'listRecords']);
+    expect(functions.sort()).toEqual(['amendNote', 'createNote', 'getRecordPrintout', 'listPendingConsultations', 'listRecords']);
   });
 });

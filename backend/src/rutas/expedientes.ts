@@ -6,6 +6,7 @@
 // Lo usa:       app.ts, montado en /api/pacientes/:patientId/expediente.
 //
 //   GET  /                          historial del paciente (de todas las sucursales)
+//   GET  /impresion                 el expediente completo, para imprimir (queda en la bitácora)
 //   GET  /pendientes                citas del médico con el paciente que aún no tienen nota
 //   POST /                          escribir la nota de una consulta
 //   POST /:recordId/enmiendas       corregir o completar una nota
@@ -18,7 +19,7 @@
 // edita; se enmienda.
 // =============================================================================
 import { Router } from 'express';
-import { amendNoteHandler, getHistoryHandler, listPendingHandler, writeNoteHandler } from '../controladores/expedientes';
+import { amendNoteHandler, getHistoryHandler, listPendingHandler, printRecordHandler, writeNoteHandler } from '../controladores/expedientes';
 import { AmendRecordSchema, CreateRecordSchema, ListRecordsQuerySchema } from '../esquemas/expedientes';
 import { resolveBranchScope } from '../intermediarios/alcanceSucursal';
 import { authenticate, can } from '../intermediarios/autenticacion';
@@ -31,6 +32,8 @@ router.use(authenticate);
 router.get('/', can('medical_records_read'), resolveBranchScope, validateQuery(ListRecordsQuerySchema), getHistoryHandler);
 // Citas del médico con el paciente que aún no tienen nota (para elegir a cuál escribirla).
 router.get('/pendientes', can('medical_records_author'), resolveBranchScope, listPendingHandler);
+// El expediente completo para imprimir; sacarlo del sistema queda en la bitácora.
+router.get('/impresion', can('medical_records_output'), resolveBranchScope, printRecordHandler);
 router.post('/', can('medical_records_author'), resolveBranchScope, validate(CreateRecordSchema), writeNoteHandler);
 router.post(
   '/:recordId/enmiendas',

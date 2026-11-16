@@ -17,11 +17,15 @@
 //     futura. Cada consulta tiene una sola nota.
 //   - Consultas sin nota: cada médico ve las suyas con ese paciente (para elegir
 //     a cuál escribirle la nota); no es un dato clínico, así que no se audita.
+//   - Imprimir: solo el médico que atiende al paciente (no basta una interconsulta,
+//     que es de lectura). Sacar el expediente del sistema queda en la bitácora
+//     ANTES de entregar los datos, igual que una lectura.
 //   - Enmendar: solo un médico que haya atendido al paciente (no basta una
 //     interconsulta, que es de lectura). Nunca se edita una nota: se agrega otra.
 //   - Quién escribe y en qué sucursal sale del token y de la sucursal activa
 //     (RB-03), nunca del cuerpo de la petición.
 // =============================================================================
+import { RECORD_PRINT_MAX_ENTRIES } from '../configuracion/negocio';
 import type { AmendRecordInput, CreateRecordInput, ListRecordsQuery } from '../esquemas/expedientes';
 import { AppError } from '../intermediarios/errores';
 import { createAuditEntry } from '../modelos/auditoria';
@@ -174,4 +178,30 @@ export async function getPendingConsultations(patientId: string, actor: AccessAc
     throw new AppError('Solo el médico que atendió la consulta puede escribir en el expediente.', 403);
   }
   return listPendingConsultations(actor.userId, patientId, todayInElSalvador());
+}
+
+// El expediente completo para imprimir (hasta RECORD_PRINT_MAX_ENTRIES entradas,
+// las más recientes). Devuelve las filas, si se recortó y el total.
+export async function getPrintout(
+  patientId: string,
+  actor: AccessActor,
+): Promise<{ rows: RecordEntry[]; total: number; truncated: boolean }> {
+  await assertPatientExists(patientId);
+  const access = await requirePatientAccess(patientId, actor);
+  if (access.reason !== 'appointment') {
+    throw new AppError('Solo el médico que atiende al paciente puede imprimir su expediente.', 403);
+  }
+
+  // Constancia de la impresión antes de entregar nada: si no se puede dejar, no se entrega.
+  await createAuditEntry({
+    entityType: 'patient',
+    action: 'record_printed',
+    entityId: patientId,
+    actorId: actor.userId,
+    branchId: actor.branchId,
+    detail: { access: access.reason },
+  });
+
+  const { rows, total } = await listRecords(patientId, 1, RECORD_PRINT_MAX_ENTRIES);
+  return { rows, total, truncated: total > rows.length };
 }

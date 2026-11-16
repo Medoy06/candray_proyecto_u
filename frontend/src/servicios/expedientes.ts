@@ -109,3 +109,19 @@ export async function amendNote(patientId: string, recordId: string, input: Amen
   );
   return response.data.data;
 }
+
+// El expediente completo para imprimir (hasta 500 entradas, las más recientes).
+export interface RecordPrintout {
+  rows: RecordEntry[];
+  total: number;
+  truncated: boolean; // true = el expediente tiene más entradas que las impresas
+}
+
+// GET /api/pacientes/:id/expediente/impresion — solo el médico que atiende al paciente.
+// Cada llamada queda en la bitácora como una impresión.
+export async function getRecordPrintout(patientId: string): Promise<RecordPrintout> {
+  const response = await api.get<{ data: RecordEntry[]; total: number; truncated: boolean }>(
+    `/pacientes/${patientId}/expediente/impresion`,
+  );
+  return { rows: response.data.data, total: response.data.total, truncated: response.data.truncated };
+}

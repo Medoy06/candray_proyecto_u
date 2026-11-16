@@ -11,7 +11,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Capability } from '../../src/configuracion/capacidades';
 import type { Role } from '../../src/configuracion/roles';
 import { PaginaExpediente } from '../../src/paginas/expediente/PaginaExpediente';
@@ -19,6 +19,8 @@ import type { PendingConsultation, RecordAccess, RecordEntry } from '../../src/s
 import type { Patient } from '../../src/servicios/pacientes';
 import { installFakeApi, type RecordedRequest } from '../ayudas/apiFalsa';
 import { renderConSesion } from '../ayudas/conSesion';
+import { todayText } from '../../src/utilidades/fechaLocal';
+import { formatDate } from '../../src/utilidades/formatoFecha';
 
 const PATIENT: Patient = {
   id: 'p1', record_number: 101, full_name: 'Ana Pérez', birth_date: '1990-05-20', phone: '7000-1111',
@@ -62,6 +64,9 @@ function server(options: {
     }
     if (request.method === 'get' && request.url === '/pacientes/p1/expediente/pendientes') {
       return { status: 200, data: { data: pending } };
+    }
+    if (request.method === 'get' && request.url === '/pacientes/p1/expediente/impresion') {
+      return { status: 200, data: { data: ENTRIES, total: ENTRIES.length, truncated: false } };
     }
     if (request.method === 'post') return { status: 201, data: { data: NOTE } };
     return { status: 404 };
@@ -475,5 +480,172 @@ describe('PaginaExpediente — enmendar una nota', () => {
     await userEvent.click(dlg().getByRole('button', { name: 'Guardar enmienda' }));
     expect(await dlg().findByText(/Solo un médico que haya atendido/)).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+});
+
+describe('PaginaExpediente — imprimir', () => {
+  const PRINT_CAPS: Capability[] = [...DOCTOR_CAPS, 'medical_records_output'];
+  const printCalls = (received: RecordedRequest[]) =>
+    received.filter((r) => r.method === 'get' && r.url === '/pacientes/p1/expediente/impresion');
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('quien atiende al paciente y puede imprimir ve "Imprimir expediente"', async () => {
+    server();
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    expect(screen.getByRole('button', { name: 'Imprimir expediente' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['sin la capacidad de imprimir', { access: { reason: 'appointment' } as RecordAccess, caps: DOCTOR_CAPS, role: 'doctor' as Role }],
+    ['por interconsulta', { access: { reason: 'referral', expiresAt: '2026-12-01 10:00:00' } as RecordAccess, caps: PRINT_CAPS, role: 'doctor' as Role }],
+    ['como administración', { access: { reason: 'role' } as RecordAccess, caps: PRINT_CAPS, role: 'admin' as Role }],
+  ])('%s no hay botón de imprimir', async (_name, { access, caps, role }) => {
+    server({ access });
+    mount({ role, capabilities: caps });
+    await screen.findByText('Miopía leve');
+    expect(screen.queryByRole('button', { name: /Imprimir/ })).not.toBeInTheDocument();
+  });
+
+  it('el documento no existe hasta que se pide la impresión', async () => {
+    server();
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    expect(screen.queryByLabelText('Documento para imprimir')).not.toBeInTheDocument();
+  });
+
+  it('al pulsarlo pide el expediente completo UNA vez, arma el documento y abre la impresión', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const received = server();
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    const document = await screen.findByLabelText('Documento para imprimir');
+    expect(printCalls(received)).toHaveLength(1);
+    expect(print).toHaveBeenCalledTimes(1);
+    const sheet = within(document);
+    expect(sheet.getByText('Clínicas y Ópticas Candray')).toBeInTheDocument();
+    expect(sheet.getByRole('heading', { name: 'Expediente clínico: Ana Pérez' })).toBeInTheDocument();
+    expect(sheet.getByText('Expediente N.º 101 · Nacimiento 20/05/1990')).toBeInTheDocument();
+    expect(sheet.getByText(`Impreso el ${formatDate(todayText())} por Alejandro Mejía. Documento confidencial.`)).toBeInTheDocument();
+  });
+
+  it('en papel las entradas van de la más antigua a la más reciente y sin botones de enmendar', async () => {
+    vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    server();
+    mount({ capabilities: [...PRINT_CAPS] });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    const sheet = within(await screen.findByLabelText('Documento para imprimir'));
+    const diagnoses = sheet.getAllByRole('article').map((entry) => entry.querySelector('dd')?.textContent);
+    expect(diagnoses).toEqual(['Control normal', 'Miopía leve', 'Miopía moderada']);
+    expect(sheet.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('solo se ve al imprimir: oculto en pantalla, y la página normal se oculta al imprimir', async () => {
+    vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    server();
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    const sheet = await screen.findByLabelText('Documento para imprimir');
+    expect(sheet).toHaveClass('hidden', 'print:block');
+    expect(screen.getByRole('link', { name: /Volver a pacientes/ }).parentElement).toHaveClass('print:hidden');
+  });
+
+  it('si el expediente se recortó, el documento lo dice', async () => {
+    vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    server({
+      override: (request) =>
+        request.url.endsWith('/impresion') ? { status: 200, data: { data: ENTRIES, total: 700, truncated: true } } : undefined,
+    });
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    const sheet = within(await screen.findByLabelText('Documento para imprimir'));
+    expect(sheet.getByText('Se imprimen las 3 entradas más recientes de 700.')).toBeInTheDocument();
+  });
+
+  it('sin recorte no dice nada de recortes', async () => {
+    vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    server();
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    const sheet = within(await screen.findByLabelText('Documento para imprimir'));
+    expect(sheet.queryByText(/Se imprimen las/)).not.toBeInTheDocument();
+  });
+
+  it('al terminar la impresión el documento se descarta, y una impresión nueva pide datos nuevos', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const received = server();
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    await screen.findByLabelText('Documento para imprimir');
+    fireEvent(window, new Event('afterprint'));
+    await waitFor(() => expect(screen.queryByLabelText('Documento para imprimir')).not.toBeInTheDocument());
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    await screen.findByLabelText('Documento para imprimir');
+    expect(printCalls(received)).toHaveLength(2);
+    expect(print).toHaveBeenCalledTimes(2);
+  });
+
+  it('si el servidor lo niega, muestra su mensaje y NO abre la impresión', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    server({
+      override: (request) =>
+        request.url.endsWith('/impresion')
+          ? { status: 403, data: { success: false, message: 'Solo el médico que atiende al paciente puede imprimir su expediente.' } }
+          : undefined,
+    });
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    expect(await screen.findByText(/Solo el médico que atiende al paciente puede imprimir/)).toBeInTheDocument();
+    expect(print).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Documento para imprimir')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Imprimir expediente' })).toBeEnabled();
+  });
+
+  it('un error anterior de impresión desaparece al volver a intentarlo', async () => {
+    vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    let deny = true;
+    server({
+      override: (request) =>
+        request.url.endsWith('/impresion') && deny ? { status: 500 } : undefined,
+    });
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    await screen.findByText('No se pudo preparar la impresión.');
+    deny = false;
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    await screen.findByLabelText('Documento para imprimir');
+    expect(screen.queryByText('No se pudo preparar la impresión.')).not.toBeInTheDocument();
+  });
+
+  it('mientras prepara el documento el botón dice "Preparando..." y se apaga', async () => {
+    vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    installFakeApi(async (request) => {
+      if (request.url === '/pacientes/p1') return { status: 200, data: { data: PATIENT } };
+      if (request.url === '/pacientes/p1/expediente') return { status: 200, data: { data: ENTRIES, access: { reason: 'appointment' }, pagination: pagination() } };
+      if (request.url.endsWith('/impresion')) {
+        await gate;
+        return { status: 200, data: { data: ENTRIES, total: 3, truncated: false } };
+      }
+      return { status: 404 };
+    });
+    mount({ capabilities: PRINT_CAPS });
+    await screen.findByText('Miopía leve');
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimir expediente' }));
+    expect(screen.getByRole('button', { name: 'Preparando...' })).toBeDisabled();
+    release();
+    await screen.findByLabelText('Documento para imprimir');
   });
 });

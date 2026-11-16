@@ -59,3 +59,9 @@ export const DUI_PATTERN = /^\d{8}-\d$/;
 // abierto por mucho tiempo: si hace falta más, se da una interconsulta nueva.
 export const REFERRAL_DEFAULT_DAYS = 14;
 export const REFERRAL_MAX_DAYS = 30;
+
+// --- Impresión del expediente -----------------------------------------------
+// Cuántas entradas como máximo trae la versión para imprimir. Un expediente
+// más largo se imprime recortado a las más recientes y la respuesta lo avisa
+// ("truncated"), en vez de armar un documento sin límite.
+export const RECORD_PRINT_MAX_ENTRIES = 500;
