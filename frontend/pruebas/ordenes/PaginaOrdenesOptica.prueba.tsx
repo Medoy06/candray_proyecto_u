@@ -30,7 +30,7 @@ const ORDER: OpticalOrder = {
   prescription_id: 'r1', prescription_created_at: '2026-10-01 10:00:00', prescription_is_current: true,
   branch_id: CENTRAL.id, branch_name: 'Candray Central', created_by: 'u1', created_by_name: 'Marta López',
   frame_description: 'Armazón metálico negro', lens_description: 'Lentes con antirreflejo',
-  total_amount: 120, deposit_amount: 40, balance: 80, notes: 'Entrega urgente',
+  total_amount: 120, subtotal_amount: 106.19, tax_amount: 13.81, deposit_amount: 40, balance: 80, notes: 'Entrega urgente',
   status: 'pending', cancellation_reason: null, created_at: '2026-10-05 09:30:00', updated_at: '2026-10-05 09:30:00',
 };
 const withStatus = (order: OpticalOrder, status: OpticalOrderStatus, extra: Partial<OpticalOrder> = {}): OpticalOrder => ({ ...order, status, ...extra });
@@ -305,6 +305,17 @@ describe('el detalle', () => {
       'Creada · Marta López, 05/10/2026 09:30',
       'En taller · Luis Ramos, 06/10/2026 11:00',
     ]);
+  });
+
+  it('el detalle muestra el subtotal, el IVA y el total tal como los entrega el servidor', async () => {
+    server({ orders: [{ ...ORDER, total_amount: 120, subtotal_amount: 100, tax_amount: 20 }] });
+    mount();
+    await openDetail();
+    // Cifras distintas de las reales a propósito: la pantalla no debe calcularlas.
+    const money = dlg();
+    expect(money.getByText('Subtotal (sin IVA)').nextElementSibling).toHaveTextContent('$100.00');
+    expect(money.getByText('IVA (13 %)').nextElementSibling).toHaveTextContent('$20.00');
+    expect(money.getByText('Total (IVA incluido)').nextElementSibling).toHaveTextContent('$120.00');
   });
 
   it('una orden cancelada muestra su motivo', async () => {

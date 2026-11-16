@@ -19,6 +19,7 @@ import { PaginaNoEncontrada } from '../paginas/comunes/PaginaNoEncontrada';
 import { PaginaAuditoria } from '../paginas/auditoria/PaginaAuditoria';
 import { PaginaCitas } from '../paginas/citas/PaginaCitas';
 import { PaginaExpediente } from '../paginas/expediente/PaginaExpediente';
+import { PaginaHorarios } from '../paginas/horarios/PaginaHorarios';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
 import { PaginaOrdenesOptica } from '../paginas/ordenes/PaginaOrdenesOptica';
 import { PaginaPanel } from '../paginas/panel/PaginaPanel';
@@ -35,6 +36,7 @@ const PAGES: Record<RouteId, ComponentType> = {
   recordatorios: PaginaRecordatorios,
   'ordenes-optica': PaginaOrdenesOptica,
   usuarios: PaginaUsuarios,
+  horarios: PaginaHorarios,
   sucursales: PaginaSucursales,
   auditoria: PaginaAuditoria,
 };

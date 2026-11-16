@@ -51,6 +51,14 @@ describe('RutasAplicacion', () => {
     await screen.findByText(/No hay usuarios que coincidan/); // deja terminar la carga
   });
 
+  it('/horarios abre la página real de horarios, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: [] } }));
+    renderConSesion(<RutasAplicacion />, { route: '/horarios', capabilities: ['schedules_manage'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Horarios de médicos' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText(/No hay médicos activos/); // deja terminar la carga
+  });
+
   it('/pacientes abre la página real de pacientes, no el aviso de construcción', async () => {
     installFakeApi((request) =>
       request.url === '/pacientes'
@@ -114,7 +122,7 @@ describe('RutasAplicacion', () => {
     expect(received).toHaveLength(0);
   });
 
-  it.each(['/citas', '/ordenes-optica', '/panel', '/recordatorios', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
+  it.each(['/citas', '/ordenes-optica', '/panel', '/recordatorios', '/pacientes', '/usuarios', '/horarios', '/sucursales', '/auditoria'])(
     'sin la capacidad, %s muestra "Sin acceso" y NO la pantalla',
     (path) => {
       renderConSesion(<RutasAplicacion />, { route: path, capabilities: [] });

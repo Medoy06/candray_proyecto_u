@@ -32,7 +32,9 @@ export interface OpticalOrder {
   created_by_name: string;
   frame_description: string;
   lens_description: string;
-  total_amount: number;
+  total_amount: number;              // con IVA incluido
+  subtotal_amount: number;           // el total sin IVA (lo calcula el servidor)
+  tax_amount: number;                // el IVA contenido en el total
   deposit_amount: number;
   balance: number;                   // lo que falta por pagar
   notes: string | null;

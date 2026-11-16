@@ -100,7 +100,9 @@ export function DetalleOrden({ order, canManage, canSeePrescription, onClose, on
           <Dato label="Sucursal">{shown.branch_name}</Dato>
           <Dato label="Armazón">{shown.frame_description}</Dato>
           <Dato label="Lentes">{shown.lens_description}</Dato>
-          <Dato label="Total">{formatMoney(shown.total_amount)}</Dato>
+          <Dato label="Subtotal (sin IVA)">{formatMoney(shown.subtotal_amount)}</Dato>
+          <Dato label="IVA (13 %)">{formatMoney(shown.tax_amount)}</Dato>
+          <Dato label="Total (IVA incluido)">{formatMoney(shown.total_amount)}</Dato>
           <Dato label="Anticipo">{formatMoney(shown.deposit_amount)}</Dato>
           <Dato label="Saldo">{formatMoney(shown.balance)}</Dato>
           <Dato label="Registrada por">

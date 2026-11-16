@@ -56,6 +56,11 @@ describe('visibleSections', () => {
     expect(labelsOf([])).toEqual(['Inicio']);
   });
 
+  it('schedules_manage abre solo los horarios de médicos, en Administración', () => {
+    expect(labelsOf(['schedules_manage'])).toEqual(['Inicio', 'Horarios de médicos']);
+    expect(ROUTES.find((route) => route.id === 'horarios')?.section).toBe('administracion');
+  });
+
   it('una capacidad abre solo su pantalla', () => {
     expect(labelsOf(['audit_read'])).toEqual(['Inicio', 'Auditoría']);
   });

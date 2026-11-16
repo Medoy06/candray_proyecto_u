@@ -19,7 +19,7 @@
 // autoriza cada acción es el backend; esto solo evita mostrar lo que daría error.
 // =============================================================================
 import {
-  Bell, Building2, CalendarDays, Glasses, House, LayoutDashboard, ScrollText, UserRound, Users, type LucideIcon,
+  Bell, Building2, CalendarDays, Clock, Glasses, House, LayoutDashboard, ScrollText, UserRound, Users, type LucideIcon,
 } from 'lucide-react';
 import type { Capability } from './capacidades';
 
@@ -109,6 +109,15 @@ export const ROUTES = [
     section: 'administracion',
     icon: Users,
     capability: 'users_manage',
+  },
+  {
+    id: 'horarios',
+    path: '/horarios',
+    label: 'Horarios de médicos',
+    description: 'Definir los días y horas de atención de cada médico.',
+    section: 'administracion',
+    icon: Clock,
+    capability: 'schedules_manage',
   },
   {
     id: 'sucursales',
