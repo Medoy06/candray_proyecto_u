@@ -82,6 +82,7 @@ const PAST_BUSINESS_DAYS = 3;
 const FUTURE_BUSINESS_DAYS = 6; // incluye hoy si es día hábil
 
 export interface ClinicalSummary {
+  patientIds: string[];   // ids de los pacientes sembrados, en el orden de DEMO_PATIENTS
   patients: number;
   schedules: number;
   appointments: number;
@@ -257,6 +258,7 @@ export async function seedClinicalDemo(
   }
 
   return {
+    patientIds,
     patients: patientIds.length,
     schedules: scheduleCount,
     appointments: appointmentCount,

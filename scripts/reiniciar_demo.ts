@@ -37,11 +37,13 @@ async function resetDemo(): Promise<void> {
   await applyMigrations();
 
   const summary = await seedDemo();
-  const { clinical } = summary;
+  const { clinical, optical } = summary;
   console.log(`\nSemilla: ${summary.branches} sucursales y ${summary.users} usuarios.`);
   console.log(
     `         ${clinical.patients} pacientes, ${clinical.schedules} bloques de horario, ${clinical.appointments} citas,\n` +
-    `         ${clinical.medicalRecords} notas de expediente y ${clinical.referrals} interconsulta.\n`,
+    `         ${clinical.medicalRecords} notas de expediente y ${clinical.referrals} interconsulta.\n` +
+    `         ${optical.consents} consentimientos (${optical.revokedConsents} revocado), ` +
+    `${optical.prescriptions} recetas y ${optical.orders} órdenes de óptica.\n`,
   );
 
   console.log(`Usuarios de demostración (contraseña de todos: ${DEMO_PASSWORD})`);

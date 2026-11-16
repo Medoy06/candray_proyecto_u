@@ -9,6 +9,7 @@
 import request from 'supertest';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { DEMO_PASSWORD, DEMO_USERS, seedDemo } from '../../../base_datos/semillas/demostracion';
+import { DEMO_PATIENTS } from '../../../base_datos/semillas/demostracionClinica';
 import { pool } from '../../src/configuracion/baseDatos';
 import { createApp } from '../../src/app';
 
@@ -185,6 +186,89 @@ describe('Semilla de demostración', () => {
       );
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0]).toEqual({ attended_by_provider: 0, active: true });
+    });
+  });
+
+  // La óptica se prueba por la API, como la vería quien usa el sistema.
+  describe('óptica: consentimientos, recetas y órdenes', () => {
+    // Inicia sesión y devuelve el token de acceso.
+    const tokenOf = async (email: string): Promise<string> => (await login(email)).body.data.token as string;
+    const nameOf = (index: number) => DEMO_PATIENTS[index].full_name;
+
+    // Estado de cada orden de la lista, por nombre de paciente.
+    const statusByPatient = async (email: string): Promise<Record<string, string>> => {
+      const response = await request(app)
+        .get('/api/ordenes-optica?page_size=50')
+        .set('Authorization', `Bearer ${await tokenOf(email)}`);
+      expect(response.status).toBe(200);
+      return Object.fromEntries(
+        response.body.data.map((order: { patient_name: string; status: string }) => [order.patient_name, order.status]),
+      );
+    };
+
+    it('el resumen cuenta cinco casos, con un consentimiento revocado y una receta reemplazada', () => {
+      expect(summary.optical).toEqual({ consents: 5, revokedConsents: 1, prescriptions: 6, orders: 5 });
+    });
+
+    it('la óptica de Central ve sus cuatro órdenes y la de Escalón ve la suya, cada una en su estado', async () => {
+      const central = await statusByPatient('optica.central@candray.test');
+      expect(central).toEqual({
+        [nameOf(0)]: 'pending',
+        [nameOf(1)]: 'in_lab',
+        [nameOf(2)]: 'delivered',
+        [nameOf(4)]: 'ready',
+      });
+      expect(await statusByPatient('optica.escalon@candray.test')).toEqual({ [nameOf(3)]: 'cancelled' });
+    });
+
+    it('solo la orden cuya receta fue reemplazada lo avisa', async () => {
+      const response = await request(app)
+        .get('/api/ordenes-optica?page_size=50')
+        .set('Authorization', `Bearer ${await tokenOf('optica.central@candray.test')}`);
+      const outdated = response.body.data
+        .filter((order: { prescription_is_current: boolean }) => !order.prescription_is_current)
+        .map((order: { patient_name: string }) => order.patient_name);
+      expect(outdated).toEqual([nameOf(0)]);
+    });
+
+    it('la orden entregada trae su historia completa, en orden y empezando sin estado anterior', async () => {
+      const token = await tokenOf('optica.central@candray.test');
+      const list = await request(app).get('/api/ordenes-optica?status=delivered').set('Authorization', `Bearer ${token}`);
+      const detail = await request(app).get(`/api/ordenes-optica/${list.body.data[0].id}`).set('Authorization', `Bearer ${token}`);
+      expect(detail.body.data.events.map((event: { from_status: string | null; to_status: string }) => [event.from_status, event.to_status]))
+        .toEqual([[null, 'pending'], ['pending', 'in_lab'], ['in_lab', 'ready'], ['ready', 'delivered']]);
+    });
+
+    it('la orden cancelada trae su motivo', async () => {
+      const token = await tokenOf('optica.escalon@candray.test');
+      const list = await request(app).get('/api/ordenes-optica?status=cancelled').set('Authorization', `Bearer ${token}`);
+      expect(list.body.data[0].cancellation_reason).toBe('El paciente prefirió otro armazón');
+    });
+
+    it('con consentimiento vigente la óptica lee solo la receta vigente; con el consentimiento revocado, nada', async () => {
+      const token = await tokenOf('optica.central@candray.test');
+      const ids = summary.clinical.patientIds;
+      const granted = await request(app).get(`/api/pacientes/${ids[0]}/recetas`).set('Authorization', `Bearer ${token}`);
+      expect(granted.status).toBe(200);
+      expect(granted.body.access).toBe('consent');
+      // El primer paciente tiene dos recetas (la original y su reemplazo): la óptica solo ve la vigente.
+      expect(granted.body.data).toHaveLength(1);
+      expect(granted.body.data[0].lens_notes).toBe('Graduación corregida en el control');
+
+      const revoked = await request(app).get(`/api/pacientes/${ids[4]}/recetas`).set('Authorization', `Bearer ${token}`);
+      expect(revoked.status).toBe(403);
+    });
+
+    it('cada orden termina con el mismo estado que su último evento y el anticipo no pasa del total', async () => {
+      const result = await pool.query<{ bad: number }>(
+        `SELECT count(*)::int AS bad
+           FROM optical_orders o
+          WHERE o.created_by IN (SELECT id FROM users WHERE email LIKE 'optica.%@candray.test')
+            AND (o.status IS DISTINCT FROM (SELECT e.to_status FROM optical_order_events e
+                                             WHERE e.order_id = o.id ORDER BY e.created_at DESC, e.id DESC LIMIT 1)
+                 OR o.deposit_amount > o.total_amount)`,
+      );
+      expect(result.rows[0].bad).toBe(0);
     });
   });
 

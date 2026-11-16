@@ -4,7 +4,7 @@
 // Lo usan:      el tipo de usuario de la sesión, la barra lateral y el login.
 //
 // Es la misma lista que backend/src/configuracion/roles.ts y que el tipo
-// user_role de la base de datos. verificar_roles.sh (paso 6) compara las tres.
+// user_role de la base de datos. scripts/verificar_roles.sh compara las tres.
 // =============================================================================
 export const ROLES = ['admin', 'doctor', 'recepcionista', 'encargado_venta', 'directivo'] as const;
 

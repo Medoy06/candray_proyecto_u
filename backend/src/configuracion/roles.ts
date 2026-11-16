@@ -10,7 +10,8 @@
 //   1. Este archivo (la lista ROLES).
 //   2. La base de datos: una migración nueva con
 //        ALTER TYPE user_role ADD VALUE '<rol>';
-//   3. El frontend: el tipo Role y la lista de roles de configuracion/acceso.ts.
+//   3. El frontend: la lista ROLES y los nombres ROLE_LABELS de
+//      frontend/src/configuracion/roles.ts.
 //   4. permisos.ts: qué puede hacer el nuevo rol.
 // scripts/verificar_roles.sh compara las listas de los puntos 1, 2 y 3, de modo
 // que olvidar uno aparece como un error y no como un hueco silencioso.

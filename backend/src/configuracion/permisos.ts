@@ -21,8 +21,10 @@
 // Se mantiene un mapa plano a propósito: sin jerarquías, herencia ni comodines.
 // Para cambiar un acceso se edita UNA lista aquí, sin buscar en las rutas.
 //
-// El frontend tiene su propia copia (configuracion/acceso.ts) que solo sirve
-// para ocultar opciones. El backend es siempre quien decide de verdad.
+// El frontend solo tiene los NOMBRES de las capacidades (configuracion/capacidades.ts);
+// quién tiene cada una le llega en el inicio de sesión, y solo sirve para ocultar
+// opciones. El backend es siempre quien decide de verdad. scripts/verificar_rutas.sh
+// comprueba que las dos listas de nombres sean iguales.
 // =============================================================================
 import type { Role } from './roles';
 
