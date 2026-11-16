@@ -176,3 +176,33 @@ export async function insertPrescription(input: {
   );
 }
 
+
+// Inserta una orden de óptica con SQL directo (sin pasar por la API).
+// Por defecto: total 120.00, anticipo 40.00 y estado pendiente.
+// `columns` cambia o agrega columnas (por ejemplo { status: 'in_lab' }).
+export async function insertOpticalOrder(input: {
+  patientId: string;
+  prescriptionId: string;
+  branchId: string;
+  createdBy: string;
+  columns?: Record<string, unknown>;
+}) {
+  const values: Record<string, unknown> = {
+    patient_id: input.patientId,
+    prescription_id: input.prescriptionId,
+    branch_id: input.branchId,
+    created_by: input.createdBy,
+    frame_description: 'Armazón metálico negro',
+    lens_description: 'Lentes con antirreflejo',
+    total_amount: 120,
+    deposit_amount: 40,
+    ...input.columns,
+  };
+  const names = Object.keys(values);
+  return pool.query<{ id: string }>(
+    `INSERT INTO optical_orders (${names.join(', ')})
+     VALUES (${names.map((_, index) => `$${index + 1}`).join(', ')})
+     RETURNING id`,
+    names.map((name) => values[name]),
+  );
+}

@@ -26,6 +26,7 @@ import recordRoutes from './rutas/expedientes';
 import consentRoutes from './rutas/consentimientos';
 import referralRoutes from './rutas/interconsultas';
 import prescriptionRoutes from './rutas/recetas';
+import opticalOrderRoutes from './rutas/ordenesOptica';
 import scheduleRoutes from './rutas/horarios';
 import patientRoutes from './rutas/pacientes';
 import branchRoutes from './rutas/sucursales';
@@ -108,6 +109,7 @@ export function createApp(options: AppOptions = {}): Express {
   app.use('/api/horarios', scheduleRoutes);
   app.use('/api/disponibilidad', availabilityRoutes);
   app.use('/api/citas', appointmentRoutes);
+  app.use('/api/ordenes-optica', opticalOrderRoutes);
   app.use('/api/auditoria', auditRoutes);
 
   // Comprobación de que el servidor está vivo.
