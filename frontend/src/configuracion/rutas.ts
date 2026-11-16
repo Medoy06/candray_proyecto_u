@@ -103,6 +103,14 @@ export const ROUTES = [
 
 export type RouteId = (typeof ROUTES)[number]['id'];
 
+// El expediente de un paciente NO está en el menú (necesita saber de qué
+// paciente es): se abre desde la lista de pacientes. Por eso no está en ROUTES,
+// pero su dirección y la capacidad que pide viven aquí, junto al resto.
+export const RECORD_ROUTE = { path: '/pacientes/:patientId/expediente', capability: 'medical_records_read' } as const;
+
+// La dirección del expediente de un paciente concreto.
+export const recordPath = (patientId: string): string => `/pacientes/${patientId}/expediente`;
+
 // Función que responde "¿puede esta persona hacer X?" (viene de la sesión).
 export type CanFn = (capability: Capability) => boolean;
 

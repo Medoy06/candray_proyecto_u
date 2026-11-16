@@ -11,7 +11,7 @@
 import type { Request, Response } from 'express';
 import type { ListRecordsQuery } from '../esquemas/expedientes';
 import type { AccessActor } from '../servicios/accesoPaciente';
-import { amendNote, getHistory, writeNote } from '../servicios/expedientes';
+import { amendNote, getHistory, getPendingConsultations, writeNote } from '../servicios/expedientes';
 
 // Quién hace la petición, según req.user (token) y req.branchScope (sucursal activa).
 function actorOf(req: Request): AccessActor {
@@ -54,4 +54,9 @@ export async function amendNoteHandler(req: Request, res: Response): Promise<voi
     actorOf(req),
   );
   res.status(201).json({ success: true, data: amendment });
+}
+
+// GET /api/pacientes/:patientId/expediente/pendientes
+export async function listPendingHandler(req: Request, res: Response): Promise<void> {
+  res.json({ success: true, data: await getPendingConsultations(String(req.params.patientId), actorOf(req)) });
 }

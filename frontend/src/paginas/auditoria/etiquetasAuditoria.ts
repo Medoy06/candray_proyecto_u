@@ -22,12 +22,21 @@ const ACTION_LABELS: Record<string, string> = {
   user_password_reset: 'Contraseña restablecida',
   branch_created: 'Sucursal creada',
   branch_updated: 'Sucursal modificada',
+  record_viewed: 'Expediente consultado',
+  record_access_denied: 'Acceso al expediente denegado',
+  record_created: 'Nota de expediente escrita',
+  record_amended: 'Nota de expediente enmendada',
+  referral_granted: 'Interconsulta otorgada',
+  referral_revoked: 'Interconsulta revocada',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
   auth: 'Acceso',
   user: 'Usuario',
   branch: 'Sucursal',
+  patient: 'Paciente',
+  medical_record: 'Expediente',
+  referral: 'Interconsulta',
 };
 
 // Nombre de cada dato del detalle. Los datos que no aparecen aquí y son
@@ -52,10 +61,25 @@ const KEY_LABELS: Record<string, string> = {
   closing_time: 'Cierre',
   theme_color: 'Color',
   has_optical_counter: 'Mostrador de óptica',
+  access: 'Acceso',
+  expires_at: 'Vence',
+};
+
+// Valores de la bitácora que son códigos y se leen mejor traducidos.
+const VALUE_LABELS: Record<string, Record<string, string>> = {
+  access: { role: 'Por su rol', appointment: 'Por una cita', referral: 'Por interconsulta' },
+  reason: { no_relation: 'Sin cita ni interconsulta', check_failed: 'Falló la verificación' },
 };
 
 // Identificadores internos: no le dicen nada a quien lee la bitácora.
-const HIDDEN_KEYS = new Set(['account_id', 'default_branch_id']);
+const HIDDEN_KEYS = new Set([
+  'account_id',
+  'default_branch_id',
+  'patient_id',
+  'provider_id',
+  'appointment_id',
+  'amends_id',
+]);
 
 // Los textos largos se cortan para que una fila no ocupe media pantalla.
 const MAX_VALUE_LENGTH = 60;
@@ -73,6 +97,8 @@ function formatValue(key: string, value: unknown): string {
   if (typeof value === 'boolean') return value ? 'Sí' : 'No';
   if (Array.isArray(value)) return value.length === 1 ? '1 elemento' : `${value.length} elementos`;
   const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  const translated = VALUE_LABELS[key]?.[text];
+  if (translated !== undefined) return translated;
   const shown = key === 'role' && text in ROLE_LABELS ? ROLE_LABELS[text as Role] : text;
   return shown.length > MAX_VALUE_LENGTH ? `${shown.slice(0, MAX_VALUE_LENGTH)}…` : shown;
 }

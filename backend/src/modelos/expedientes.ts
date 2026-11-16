@@ -129,3 +129,34 @@ export async function findActiveReferral(
   );
   return result.rows[0] ?? null;
 }
+
+// Una consulta del médico que todavía no tiene su nota.
+export interface PendingConsultation {
+  id: string;
+  starts_at: string;
+  branch_name: string;
+  reason: string | null;
+}
+
+// Citas del médico con el paciente en las que ya puede escribir la nota: no
+// canceladas, sin ausencia, de hoy o de antes (today = 'AAAA-MM-DD') y sin nota.
+// Son las mismas condiciones que exige el servicio al escribir; la pantalla las
+// usa para ofrecer solo citas válidas. La más reciente primero.
+export async function listPendingConsultations(
+  doctorId: string,
+  patientId: string,
+  today: string,
+): Promise<PendingConsultation[]> {
+  const result = await pool.query<PendingConsultation>(
+    `SELECT a.id, a.starts_at, b.name AS branch_name, a.reason
+       FROM appointments a
+       JOIN branches b ON b.id = a.branch_id
+      WHERE a.doctor_id = $1 AND a.patient_id = $2
+        AND a.status NOT IN ('cancelled', 'no_show')
+        AND a.starts_at < ($3::date + 1)
+        AND NOT EXISTS (SELECT 1 FROM medical_records m WHERE m.appointment_id = a.id)
+      ORDER BY a.starts_at DESC, a.id`,
+    [doctorId, patientId, today],
+  );
+  return result.rows;
+}

@@ -15,6 +15,8 @@
 //   - Escribir una nota: solo el médico de la cita, sobre una cita de ese
 //     paciente que no esté cancelada, no sea ausencia y no sea de una fecha
 //     futura. Cada consulta tiene una sola nota.
+//   - Consultas sin nota: cada médico ve las suyas con ese paciente (para elegir
+//     a cuál escribirle la nota); no es un dato clínico, así que no se audita.
 //   - Enmendar: solo un médico que haya atendido al paciente (no basta una
 //     interconsulta, que es de lectura). Nunca se edita una nota: se agrega otra.
 //   - Quién escribe y en qué sucursal sale del token y de la sucursal activa
@@ -24,7 +26,14 @@ import type { AmendRecordInput, CreateRecordInput, ListRecordsQuery } from '../e
 import { AppError } from '../intermediarios/errores';
 import { createAuditEntry } from '../modelos/auditoria';
 import { findAppointment } from '../modelos/citas';
-import { findRecord, insertRecord, listRecords, type RecordEntry } from '../modelos/expedientes';
+import {
+  findRecord,
+  insertRecord,
+  listPendingConsultations,
+  listRecords,
+  type PendingConsultation,
+  type RecordEntry,
+} from '../modelos/expedientes';
 import { findPatient } from '../modelos/pacientes';
 import { auditLog } from '../utilidades/auditoria';
 import { todayInElSalvador } from '../utilidades/fechas';
@@ -156,4 +165,13 @@ export async function amendNote(
     detail: { patient_id: patientId, amends_id: original.id },
   });
   return (await findRecord(amendmentId))!;
+}
+
+// Citas del propio médico con el paciente que todavía no tienen nota.
+export async function getPendingConsultations(patientId: string, actor: AccessActor): Promise<PendingConsultation[]> {
+  await assertPatientExists(patientId);
+  if (actor.role !== 'doctor') {
+    throw new AppError('Solo el médico que atendió la consulta puede escribir en el expediente.', 403);
+  }
+  return listPendingConsultations(actor.userId, patientId, todayInElSalvador());
 }

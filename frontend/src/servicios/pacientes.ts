@@ -78,3 +78,9 @@ export async function updatePatient(id: string, input: UpdatePatientInput): Prom
   const response = await api.patch<{ data: Patient }>(`/pacientes/${id}`, input);
   return response.data.data;
 }
+
+// GET /api/pacientes/:id — los datos de un paciente. Lanza 404 si no existe.
+export async function getPatient(id: string): Promise<Patient> {
+  const response = await api.get<{ data: Patient }>(`/pacientes/${id}`);
+  return response.data.data;
+}

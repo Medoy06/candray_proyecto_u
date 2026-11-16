@@ -9,6 +9,7 @@
 // =============================================================================
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes, useParams } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { PaginaPacientes } from '../../src/paginas/pacientes/PaginaPacientes';
 import type { Patient } from '../../src/servicios/pacientes';
@@ -245,6 +246,49 @@ describe('PaginaPacientes — quién ve qué', () => {
     expect(screen.queryByRole('button', { name: /Editar a/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Desactivar a|Activar a/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Acciones' })).not.toBeInTheDocument();
+  });
+});
+
+// Destino de prueba: dice de qué paciente es la dirección a la que se llegó.
+function DestinoExpediente() {
+  const { patientId } = useParams();
+  return <p>Pantalla del expediente de {patientId}</p>;
+}
+
+describe('PaginaPacientes — expediente clínico', () => {
+  const mountMedico = () =>
+    renderConSesion(
+      <Routes>
+        <Route path="/pacientes" element={<PaginaPacientes />} />
+        <Route path="/pacientes/:patientId/expediente" element={<DestinoExpediente />} />
+      </Routes>,
+      { role: 'doctor', capabilities: ['patients_search', 'medical_records_read'], route: '/pacientes' },
+    );
+
+  it('quien puede leer expedientes (médico) ve "Expediente" en cada fila, pero ningún botón de modificar', async () => {
+    server();
+    mountMedico();
+    await screen.findByText('Ana Pérez');
+    expect(screen.getByRole('columnheader', { name: 'Acciones' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Abrir el expediente de Ana Pérez' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Abrir el expediente de/ })).toHaveLength(3);
+    expect(screen.queryByRole('button', { name: /Editar a|Desactivar a|Activar a/ })).not.toBeInTheDocument();
+  });
+
+  it('al pulsarlo abre el expediente de ESE paciente', async () => {
+    server();
+    mountMedico();
+    await screen.findByText('Luis Gómez');
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir el expediente de Luis Gómez' }));
+    expect(await screen.findByText('Pantalla del expediente de p2')).toBeInTheDocument();
+  });
+
+  it('recepción no ve el botón "Expediente" (no tiene la capacidad), pero sí los suyos', async () => {
+    server();
+    mount();
+    await screen.findByText('Ana Pérez');
+    expect(screen.queryByRole('button', { name: /Abrir el expediente/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Editar a Ana Pérez' })).toBeInTheDocument();
   });
 });
 

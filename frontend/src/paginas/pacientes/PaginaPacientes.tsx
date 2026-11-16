@@ -8,8 +8,9 @@
 //               patients_search).
 //
 // Entra quien puede buscar pacientes (médicos, recepción, ventas), pero los
-// botones de modificar solo los ve quien tiene patients_manage: ocultarlos es
-// comodidad; quien realmente decide es el backend.
+// botones de modificar solo los ve quien tiene patients_manage, y el botón
+// "Expediente" solo quien tiene medical_records_read: ocultarlos es comodidad;
+// quien realmente decide es el backend.
 // No hay "eliminar": un paciente con historial no se borra, se desactiva.
 // Igual que las demás páginas, esta es la "directora": guarda la búsqueda, la
 // página, qué ventana está abierta y qué aviso se muestra.
@@ -18,6 +19,7 @@
 // =============================================================================
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AlertaError } from '../../componentes/ui/AlertaError';
 import { AlertaExito } from '../../componentes/ui/AlertaExito';
 import { Boton } from '../../componentes/ui/Boton';
@@ -27,6 +29,7 @@ import { Paginacion } from '../../componentes/ui/Paginacion';
 import { usePacientes } from '../../ganchos/usePacientes';
 import { useSesion } from '../../ganchos/useSesion';
 import { useValorConRetraso } from '../../ganchos/useValorConRetraso';
+import { recordPath } from '../../configuracion/rutas';
 import { EMPTY_PATIENT_FILTERS, updatePatient, type Patient, type PatientFilters } from '../../servicios/pacientes';
 import { getApiErrorMessage } from '../../utilidades/errorApi';
 import { FiltrosPacientes } from './FiltrosPacientes';
@@ -38,6 +41,8 @@ const SEARCH_DELAY_MS = 300;
 export function PaginaPacientes() {
   const { can } = useSesion();
   const canManage = can('patients_manage');
+  const canOpenRecord = can('medical_records_read');
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<PatientFilters>(EMPTY_PATIENT_FILTERS);
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
@@ -130,6 +135,8 @@ export function PaginaPacientes() {
           <TablaPacientes
             patients={data.rows}
             canManage={canManage}
+            canOpenRecord={canOpenRecord}
+            onOpenRecord={(patient) => navigate(recordPath(patient.id))}
             onEdit={(patient) => open(setEditing, patient)}
             onToggleActive={setToggling}
           />

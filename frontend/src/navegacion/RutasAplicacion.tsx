@@ -14,10 +14,11 @@ import type { ComponentType } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Estructura } from '../componentes/estructura/Estructura';
 import { RutaProtegida } from '../componentes/estructura/RutaProtegida';
-import { ROUTES, type RouteId } from '../configuracion/rutas';
+import { RECORD_ROUTE, ROUTES, type RouteId } from '../configuracion/rutas';
 import { PaginaNoEncontrada } from '../paginas/comunes/PaginaNoEncontrada';
 import { PaginaAuditoria } from '../paginas/auditoria/PaginaAuditoria';
 import { PaginaCitas } from '../paginas/citas/PaginaCitas';
+import { PaginaExpediente } from '../paginas/expediente/PaginaExpediente';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
 import { PaginaPacientes } from '../paginas/pacientes/PaginaPacientes';
 import { PaginaSucursales } from '../paginas/sucursales/PaginaSucursales';
@@ -50,6 +51,15 @@ export function RutasAplicacion() {
             />
           );
         })}
+        {/* El expediente de un paciente: no está en el menú (se abre desde Pacientes). */}
+        <Route
+          path={RECORD_ROUTE.path}
+          element={
+            <RutaProtegida capability={RECORD_ROUTE.capability}>
+              <PaginaExpediente />
+            </RutaProtegida>
+          }
+        />
         {/* Cualquier otra dirección: aviso, dentro del mismo marco. */}
         <Route path="*" element={<PaginaNoEncontrada />} />
       </Route>

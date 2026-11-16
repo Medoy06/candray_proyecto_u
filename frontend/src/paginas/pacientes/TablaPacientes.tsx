@@ -8,10 +8,10 @@
 // Lo usa:       paginas/pacientes/PaginaPacientes.tsx.
 //
 // No decide nada: avisa a la página cuando se pulsa una acción. La columna de
-// acciones solo existe si la persona puede modificar pacientes (recepción);
-// quien solo consulta ve la tabla sin botones.
+// acciones solo existe si la persona puede abrir expedientes (médicos) o
+// modificar pacientes (recepción); quien solo consulta ve la tabla sin botones.
 // =============================================================================
-import { Pencil } from 'lucide-react';
+import { FileText, Pencil } from 'lucide-react';
 import { Boton } from '../../componentes/ui/Boton';
 import { Etiqueta } from '../../componentes/ui/Etiqueta';
 import { Tabla, type TablaColumna } from '../../componentes/ui/Tabla';
@@ -21,11 +21,13 @@ import { formatDate } from '../../utilidades/formatoFecha';
 interface TablaPacientesProps {
   patients: Patient[];
   canManage: boolean;
+  canOpenRecord: boolean; // puede abrir el expediente clínico (médicos y administración)
+  onOpenRecord: (patient: Patient) => void;
   onEdit: (patient: Patient) => void;
   onToggleActive: (patient: Patient) => void;
 }
 
-export function TablaPacientes({ patients, canManage, onEdit, onToggleActive }: TablaPacientesProps) {
+export function TablaPacientes({ patients, canManage, canOpenRecord, onOpenRecord, onEdit, onToggleActive }: TablaPacientesProps) {
   const columns: TablaColumna<Patient>[] = [
     { id: 'record', header: 'Expediente', noWrap: true, cell: (patient) => patient.record_number },
     {
@@ -50,24 +52,36 @@ export function TablaPacientes({ patients, canManage, onEdit, onToggleActive }: 
     },
   ];
 
-  if (canManage) {
+  // La columna existe si la persona puede hacer algo en ella: abrir el expediente
+  // (médicos) o modificar al paciente (recepción). Quien solo consulta no la ve.
+  if (canManage || canOpenRecord) {
     columns.push({
       id: 'actions',
       header: 'Acciones',
       align: 'right',
       cell: (patient) => (
         <div className="flex items-center justify-end gap-2">
-          <Boton size="icono" onClick={() => onEdit(patient)} aria-label={`Editar a ${patient.full_name}`} title="Editar">
-            <Pencil className="size-4" aria-hidden="true" />
-          </Boton>
-          <Boton
-            size="sm"
-            variant={patient.is_active ? 'peligro' : 'secundario'}
-            onClick={() => onToggleActive(patient)}
-            aria-label={`${patient.is_active ? 'Desactivar' : 'Activar'} a ${patient.full_name}`}
-          >
-            {patient.is_active ? 'Desactivar' : 'Activar'}
-          </Boton>
+          {canOpenRecord && (
+            <Boton size="sm" onClick={() => onOpenRecord(patient)} aria-label={`Abrir el expediente de ${patient.full_name}`}>
+              <FileText className="size-4" aria-hidden="true" />
+              Expediente
+            </Boton>
+          )}
+          {canManage && (
+            <>
+              <Boton size="icono" onClick={() => onEdit(patient)} aria-label={`Editar a ${patient.full_name}`} title="Editar">
+                <Pencil className="size-4" aria-hidden="true" />
+              </Boton>
+              <Boton
+                size="sm"
+                variant={patient.is_active ? 'peligro' : 'secundario'}
+                onClick={() => onToggleActive(patient)}
+                aria-label={`${patient.is_active ? 'Desactivar' : 'Activar'} a ${patient.full_name}`}
+              >
+                {patient.is_active ? 'Desactivar' : 'Activar'}
+              </Boton>
+            </>
+          )}
         </div>
       ),
     });

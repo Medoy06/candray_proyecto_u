@@ -17,6 +17,18 @@ describe('actionLabel y entityLabel', () => {
     expect(entityLabel('branch')).toBe('Sucursal');
   });
 
+  it('traducen las acciones del expediente y de las interconsultas', () => {
+    expect(actionLabel('record_viewed')).toBe('Expediente consultado');
+    expect(actionLabel('record_access_denied')).toBe('Acceso al expediente denegado');
+    expect(actionLabel('record_created')).toBe('Nota de expediente escrita');
+    expect(actionLabel('record_amended')).toBe('Nota de expediente enmendada');
+    expect(actionLabel('referral_granted')).toBe('Interconsulta otorgada');
+    expect(actionLabel('referral_revoked')).toBe('Interconsulta revocada');
+    expect(entityLabel('patient')).toBe('Paciente');
+    expect(entityLabel('medical_record')).toBe('Expediente');
+    expect(entityLabel('referral')).toBe('Interconsulta');
+  });
+
   it('un código desconocido se muestra tal cual, no se oculta', () => {
     expect(actionLabel('algo_nuevo')).toBe('algo_nuevo');
     expect(entityLabel('cita')).toBe('cita');
@@ -69,5 +81,27 @@ describe('summarizeDetail', () => {
     expect(line).toBe(`Dirección: ${'x'.repeat(60)}…`);
     const [exact] = summarizeDetail({ address: 'x'.repeat(60) });
     expect(exact).toBe(`Dirección: ${'x'.repeat(60)}`);
+  });
+});
+
+describe('summarizeDetail — expediente e interconsultas', () => {
+  it('el motivo de acceso se lee en español', () => {
+    expect(summarizeDetail({ access: 'role' })).toEqual(['Acceso: Por su rol']);
+    expect(summarizeDetail({ access: 'appointment' })).toEqual(['Acceso: Por una cita']);
+    expect(summarizeDetail({ access: 'referral' })).toEqual(['Acceso: Por interconsulta']);
+  });
+
+  it('el motivo de una negativa se lee en español', () => {
+    expect(summarizeDetail({ reason: 'no_relation' })).toEqual(['Motivo: Sin cita ni interconsulta']);
+    expect(summarizeDetail({ reason: 'check_failed' })).toEqual(['Motivo: Falló la verificación']);
+  });
+
+  it('un motivo que no es un código conocido se muestra tal cual', () => {
+    expect(summarizeDetail({ reason: 'Cuenta bloqueada' })).toEqual(['Motivo: Cuenta bloqueada']);
+  });
+
+  it('los identificadores del paciente, la cita, la nota y el médico no se muestran', () => {
+    const detail = { patient_id: 'p', appointment_id: 'a', amends_id: 'n', provider_id: 'd', expires_at: '2026-12-01 10:00:00' };
+    expect(summarizeDetail(detail)).toEqual(['Vence: 2026-12-01 10:00:00']);
   });
 });

@@ -6,7 +6,7 @@
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { CAPABILITIES, type Capability } from '../../src/configuracion/capacidades';
-import { canOpen, ROUTES, SECTIONS, visibleSections } from '../../src/configuracion/rutas';
+import { canOpen, RECORD_ROUTE, recordPath, ROUTES, SECTIONS, visibleSections } from '../../src/configuracion/rutas';
 
 const canWith = (granted: Capability[]) => (capability: Capability) => granted.includes(capability);
 const labelsOf = (granted: Capability[]) =>
@@ -87,5 +87,21 @@ describe('visibleSections', () => {
       'general',
       'administracion',
     ]);
+  });
+});
+
+describe('ruta del expediente', () => {
+  it('la dirección de un paciente concreto sale del patrón de la ruta', () => {
+    expect(recordPath('abc-123')).toBe('/pacientes/abc-123/expediente');
+    expect(RECORD_ROUTE.path.replace(':patientId', 'abc-123')).toBe(recordPath('abc-123'));
+  });
+
+  it('pide una capacidad que existe', () => {
+    expect(CAPABILITIES).toContain(RECORD_ROUTE.capability);
+  });
+
+  it('no está en el menú: necesita un paciente, se abre desde la lista de pacientes', () => {
+    expect(ROUTES.map((route) => route.path)).not.toContain(RECORD_ROUTE.path);
+    expect(labelsOf(['patients_search', 'medical_records_read'])).not.toContain('Expediente');
   });
 });

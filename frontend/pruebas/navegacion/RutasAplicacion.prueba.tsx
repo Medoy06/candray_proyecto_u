@@ -71,6 +71,25 @@ describe('RutasAplicacion', () => {
     await screen.findByText('No hay citas para este día.'); // deja terminar la carga
   });
 
+  it('/pacientes/:id/expediente abre la página real del expediente', async () => {
+    installFakeApi((request) => {
+      if (request.url === '/pacientes/p1') {
+        return { status: 200, data: { data: { id: 'p1', record_number: 7, full_name: 'Ana Pérez', birth_date: '1990-05-20' } } };
+      }
+      return { status: 200, data: { data: [], access: { reason: 'appointment' }, pagination: { page: 1, page_size: 20, total: 0, total_pages: 0 } } };
+    });
+    renderConSesion(<RutasAplicacion />, { route: '/pacientes/p1/expediente', capabilities: ['medical_records_read'] });
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ana Pérez' })).toBeInTheDocument();
+    await screen.findByText('Este paciente todavía no tiene notas en su expediente.');
+  });
+
+  it('sin medical_records_read, el expediente muestra "Sin acceso" y NO pide nada al servidor', () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: [] } }));
+    renderConSesion(<RutasAplicacion />, { route: '/pacientes/p1/expediente', capabilities: ['patients_search'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Sin acceso' })).toBeInTheDocument();
+    expect(received).toHaveLength(0);
+  });
+
   it.each(['/citas', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
     'sin la capacidad, %s muestra "Sin acceso" y NO la pantalla',
     (path) => {
