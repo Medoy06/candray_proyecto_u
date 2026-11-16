@@ -35,6 +35,9 @@ const ACTION_LABELS: Record<string, string> = {
   prescription_replaced: 'Receta reemplazada',
   prescription_viewed: 'Receta consultada',
   prescription_access_denied: 'Acceso a la receta denegado',
+  optical_order_created: 'Orden de óptica creada',
+  optical_order_status_changed: 'Orden de óptica cambió de estado',
+  optical_order_denied: 'Orden de óptica denegada',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -46,6 +49,7 @@ const ENTITY_LABELS: Record<string, string> = {
   referral: 'Interconsulta',
   consent: 'Consentimiento',
   prescription: 'Receta',
+  optical_order: 'Orden de óptica',
 };
 
 // Nombre de cada dato del detalle. Los datos que no aparecen aquí y son
@@ -72,6 +76,16 @@ const KEY_LABELS: Record<string, string> = {
   has_optical_counter: 'Mostrador de óptica',
   access: 'Acceso',
   expires_at: 'Vence',
+  from: 'Antes',
+  to: 'Después',
+};
+
+const ORDER_STATUS_VALUES: Record<string, string> = {
+  pending: 'Pendiente',
+  in_lab: 'En taller',
+  ready: 'Lista',
+  delivered: 'Entregada',
+  cancelled: 'Cancelada',
 };
 
 // Valores de la bitácora que son códigos y se leen mejor traducidos.
@@ -82,6 +96,9 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     check_failed: 'Falló la verificación',
     no_consent: 'Sin consentimiento del paciente',
   },
+  // El estado de una orden de óptica, antes y después de un cambio.
+  from: ORDER_STATUS_VALUES,
+  to: ORDER_STATUS_VALUES,
 };
 
 // Identificadores internos: no le dicen nada a quien lee la bitácora.
@@ -94,6 +111,7 @@ const HIDDEN_KEYS = new Set([
   'amends_id',
   'record_id',
   'supersedes_id',
+  'prescription_id',
 ]);
 
 // Los textos largos se cortan para que una fila no ocupe media pantalla.

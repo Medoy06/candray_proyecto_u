@@ -18,7 +18,7 @@
 // IMPORTANTE: ocultar una opción del menú NO es seguridad. Quien realmente
 // autoriza cada acción es el backend; esto solo evita mostrar lo que daría error.
 // =============================================================================
-import { Building2, CalendarDays, House, ScrollText, UserRound, Users, type LucideIcon } from 'lucide-react';
+import { Building2, CalendarDays, Glasses, House, ScrollText, UserRound, Users, type LucideIcon } from 'lucide-react';
 import type { Capability } from './capacidades';
 
 // Secciones del menú, en el orden en que se muestran. Una sección sin opciones
@@ -71,6 +71,15 @@ export const ROUTES = [
     section: 'clinico',
     icon: CalendarDays,
     capability: 'appointments_read',
+  },
+  {
+    id: 'ordenes-optica',
+    path: '/ordenes-optica',
+    label: 'Órdenes de óptica',
+    description: 'Ver y avanzar las ventas de lentes de la sucursal.',
+    section: 'optica',
+    icon: Glasses,
+    capability: 'optical_orders_read',
   },
   {
     id: 'usuarios',

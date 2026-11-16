@@ -41,7 +41,8 @@ export interface Prescription extends PrescriptionMeasures {
 }
 
 // Por qué la persona puede ver las recetas de este paciente.
-export type PrescriptionAccess = 'role' | 'appointment' | 'referral';
+// 'consent' es la óptica: ve solo las vigentes y gracias al consentimiento del paciente.
+export type PrescriptionAccess = 'role' | 'appointment' | 'referral' | 'consent';
 
 export interface PrescriptionList {
   rows: Prescription[];
@@ -81,4 +82,24 @@ export async function replacePrescription(
     input,
   );
   return response.data.data;
+}
+
+// Lo que ve la óptica de una receta: las medidas y la nota del taller, nada más.
+// (El administrador recibe la receta completa, que también cumple esta forma.)
+export type OpticalPrescription = PrescriptionMeasures &
+  Pick<Prescription, 'id' | 'created_at' | 'doctor_name' | 'is_current'>;
+
+export interface OpticalPrescriptionList {
+  rows: OpticalPrescription[];
+  access: PrescriptionAccess;
+}
+
+// GET /api/pacientes/:id/recetas, leída por la óptica. Es la misma llamada que
+// listPrescriptions; aquí solo cambia el tipo, porque la óptica recibe menos campos.
+// Lanza 403 si el paciente no tiene un consentimiento vigente.
+export async function listOpticalPrescriptions(patientId: string): Promise<OpticalPrescriptionList> {
+  const response = await api.get<{ data: OpticalPrescription[]; access: PrescriptionAccess }>(
+    `/pacientes/${patientId}/recetas`,
+  );
+  return { rows: response.data.data, access: response.data.access };
 }

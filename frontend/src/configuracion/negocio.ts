@@ -41,3 +41,12 @@ export const PRESCRIPTION_LIMITS = {
   pupillaryDistance: { min: 40, max: 80 },
   lensNotesMaxLength: 500,
 } as const;
+
+// Orden de óptica: lo que se puede escribir al crearla. Iguales a OPTICAL_ORDER_LIMITS
+// del backend. El importe máximo cabe en la columna de la base de datos.
+export const OPTICAL_ORDER_LIMITS = {
+  descriptionMaxLength: 200,
+  notesMaxLength: 500,
+  reasonMaxLength: 200,
+  maxAmount: 99999.99,
+} as const;

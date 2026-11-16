@@ -71,6 +71,14 @@ describe('RutasAplicacion', () => {
     await screen.findByText('No hay citas para este día.'); // deja terminar la carga
   });
 
+  it('/ordenes-optica abre la página real de las órdenes, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: [], pagination: { page: 1, page_size: 25, total: 0, total_pages: 0 } } }));
+    renderConSesion(<RutasAplicacion />, { route: '/ordenes-optica', capabilities: ['optical_orders_read'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Órdenes de óptica' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText('Todavía no hay órdenes en esta sucursal.'); // deja terminar la carga
+  });
+
   it('/pacientes/:id/expediente abre la página real del expediente', async () => {
     installFakeApi((request) => {
       if (request.url === '/pacientes/p1') {
@@ -90,7 +98,7 @@ describe('RutasAplicacion', () => {
     expect(received).toHaveLength(0);
   });
 
-  it.each(['/citas', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
+  it.each(['/citas', '/ordenes-optica', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
     'sin la capacidad, %s muestra "Sin acceso" y NO la pantalla',
     (path) => {
       renderConSesion(<RutasAplicacion />, { route: path, capabilities: [] });

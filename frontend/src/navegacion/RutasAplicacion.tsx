@@ -20,6 +20,7 @@ import { PaginaAuditoria } from '../paginas/auditoria/PaginaAuditoria';
 import { PaginaCitas } from '../paginas/citas/PaginaCitas';
 import { PaginaExpediente } from '../paginas/expediente/PaginaExpediente';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
+import { PaginaOrdenesOptica } from '../paginas/ordenes/PaginaOrdenesOptica';
 import { PaginaPacientes } from '../paginas/pacientes/PaginaPacientes';
 import { PaginaSucursales } from '../paginas/sucursales/PaginaSucursales';
 import { PaginaUsuarios } from '../paginas/usuarios/PaginaUsuarios';
@@ -28,6 +29,7 @@ const PAGES: Record<RouteId, ComponentType> = {
   inicio: PaginaInicio,
   pacientes: PaginaPacientes,
   citas: PaginaCitas,
+  'ordenes-optica': PaginaOrdenesOptica,
   usuarios: PaginaUsuarios,
   sucursales: PaginaSucursales,
   auditoria: PaginaAuditoria,

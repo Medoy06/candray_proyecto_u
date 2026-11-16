@@ -73,6 +73,14 @@ describe('visibleSections', () => {
     expect(labelsOf(['appointments_read', 'patients_search'])).toEqual(['Inicio', 'Pacientes', 'Citas']);
   });
 
+  it('Órdenes de óptica lo ve quien puede leer órdenes, en su propia sección', () => {
+    expect(labelsOf(['optical_orders_read'])).toEqual(['Inicio', 'Órdenes de óptica']);
+    expect(labelsOf(['optical_orders_manage'])).toEqual(['Inicio']); // crear sin poder leer no abre la pantalla
+    const optica = visibleSections(canWith(['optical_orders_read'])).find((section) => section.key === 'optica');
+    expect(optica?.label).toBe('Óptica');
+    expect(optica?.routes.map((route) => route.path)).toEqual(['/ordenes-optica']);
+  });
+
   it('con todas las capacidades ve todas las pantallas', () => {
     expect(labelsOf([...CAPABILITIES])).toEqual(ROUTES.map((route) => route.label));
   });

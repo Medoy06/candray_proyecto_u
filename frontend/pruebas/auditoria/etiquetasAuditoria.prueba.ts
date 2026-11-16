@@ -41,6 +41,19 @@ describe('actionLabel y entityLabel', () => {
     expect(summarizeDetail({ patient_id: 'x', record_id: 'y', supersedes_id: 'z' })).toEqual([]);
   });
 
+  it('traducen las acciones de las órdenes de óptica y su detalle', () => {
+    expect(actionLabel('optical_order_created')).toBe('Orden de óptica creada');
+    expect(actionLabel('optical_order_status_changed')).toBe('Orden de óptica cambió de estado');
+    expect(actionLabel('optical_order_denied')).toBe('Orden de óptica denegada');
+    expect(entityLabel('optical_order')).toBe('Orden de óptica');
+    expect(summarizeDetail({ patient_id: 'x', from: 'pending', to: 'in_lab' })).toEqual(['Antes: Pendiente', 'Después: En taller']);
+    expect(summarizeDetail({ from: 'ready', to: 'cancelled', reason: 'Cambió de opinión' })).toEqual([
+      'Antes: Lista', 'Después: Cancelada', 'Motivo: Cambió de opinión',
+    ]);
+    expect(summarizeDetail({ patient_id: 'x', prescription_id: 'y' })).toEqual([]);
+    expect(summarizeDetail({ reason: 'no_consent', prescription_id: 'y' })).toEqual(['Motivo: Sin consentimiento del paciente']);
+  });
+
   it('un código desconocido se muestra tal cual, no se oculta', () => {
     expect(actionLabel('algo_nuevo')).toBe('algo_nuevo');
     expect(entityLabel('cita')).toBe('cita');

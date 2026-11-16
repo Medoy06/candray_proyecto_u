@@ -36,7 +36,16 @@ describe('servicios/recetas', () => {
     expect(created).toEqual({ id: 'r3' });
   });
 
+  it('listOpticalPrescriptions pide la misma dirección y devuelve el motivo de acceso "consent"', async () => {
+    const received = installFakeApi(() => ({ status: 200, data: { data: [{ id: 'r1' }], access: 'consent' } }));
+    const list = await servicio.listOpticalPrescriptions('p1');
+    expect(received).toMatchObject([{ method: 'get', url: '/pacientes/p1/recetas' }]);
+    expect(list).toEqual({ rows: [{ id: 'r1' }], access: 'consent' });
+  });
+
   it('no hay llamadas para editar ni borrar una receta', () => {
-    expect(Object.keys(servicio).sort()).toEqual(['issuePrescription', 'listPrescriptions', 'replacePrescription']);
+    expect(Object.keys(servicio).sort()).toEqual([
+      'issuePrescription', 'listOpticalPrescriptions', 'listPrescriptions', 'replacePrescription',
+    ]);
   });
 });
