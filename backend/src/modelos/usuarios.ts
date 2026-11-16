@@ -83,6 +83,23 @@ export async function findUserById(id: string): Promise<SafeUser | null> {
   return result.rows[0] ?? null;
 }
 
+// Usuario ACTIVO tal como lo necesita el control de sesión: sus datos seguros y
+// la hora (en segundos) en que se cerraron sus sesiones, o null si nunca.
+export type SessionUser = SafeUser & { sessions_revoked_epoch: number | null };
+
+// Igual que findUserById, pero además trae cuándo se cerraron sus sesiones.
+// Lo usa authenticate en cada petición.
+export async function findSessionUser(id: string): Promise<SessionUser | null> {
+  const result = await pool.query<SessionUser>(
+    `SELECT id, full_name, email, role, is_active, last_login, created_at,
+            EXTRACT(EPOCH FROM sessions_revoked_at)::float8 AS sessions_revoked_epoch
+       FROM users
+      WHERE id = $1 AND is_active = true`,
+    [id],
+  );
+  return result.rows[0] ?? null;
+}
+
 // Crea un usuario nuevo. La contraseña se guarda con bcrypt.
 // Recibe: nombre, correo, contraseña en texto y rol.
 // Devuelve: los datos seguros del usuario creado.

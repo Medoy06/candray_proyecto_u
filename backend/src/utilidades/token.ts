@@ -5,7 +5,8 @@
 // Depende de:   configuracion/entorno.ts, negocio.ts y roles.ts.
 // Lo usan:      el controlador de autenticación y el intermediario autenticacion.ts.
 //
-// El token lleva solo tres datos: userId, email y role. NO lleva la sucursal
+// El token lleva solo tres datos: userId, email y role (más la hora de emisión,
+// que agrega la librería). NO lleva la sucursal
 // activa: esa se resuelve en la base de datos en cada petición (ver
 // intermediarios/alcanceSucursal.ts), para que quitarle una sucursal a un
 // usuario surta efecto de inmediato y no cuando venza el token.
@@ -25,6 +26,11 @@ const payloadSchema = z.object({
 
 export type AuthPayload = z.infer<typeof payloadSchema>;
 
+// Lo que se lee al verificar un token: lo anterior más la hora en que se emitió
+// (iat, en segundos). jsonwebtoken la agrega sola al firmar.
+const verifiedSchema = payloadSchema.extend({ iat: z.number() });
+export type VerifiedToken = z.infer<typeof verifiedSchema>;
+
 // Crea un token firmado que vence según JWT_EXPIRES_IN.
 // Recibe: los tres datos de identidad. Devuelve: el token en texto.
 export function signToken(payload: AuthPayload): string {
@@ -36,9 +42,9 @@ export function signToken(payload: AuthPayload): string {
 // Devuelve: los datos de identidad que contiene.
 // Lanza error: si la firma no coincide, el token venció, usa otro algoritmo
 // (incluido "none", un ataque clásico) o no tiene la forma esperada.
-export function verifyToken(token: string): AuthPayload {
+export function verifyToken(token: string): VerifiedToken {
   // `algorithms` obliga a aceptar SOLO HS256: sin eso, una librería podría
   // aceptar un token que el atacante firmó con otro algoritmo.
   const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
-  return payloadSchema.parse(decoded);
+  return verifiedSchema.parse(decoded);
 }

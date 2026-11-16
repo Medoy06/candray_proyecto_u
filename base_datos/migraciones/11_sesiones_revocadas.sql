@@ -1,0 +1,16 @@
+-- =============================================================================
+-- 11_sesiones_revocadas.sql
+-- Permite cerrar las sesiones que ya están abiertas de un usuario.
+-- Depende de: 01_base.sql (users).
+--
+-- Los tokens de sesión duran 8 horas y la API no los guarda: se validan por su
+-- firma. Por eso, cuando un administrador restablece una contraseña (por
+-- ejemplo porque alguien la supo), el token que ya tenía esa persona, o quien se
+-- la robó, seguiría sirviendo hasta que venciera.
+--
+-- sessions_revoked_at guarda el momento en que se cerraron las sesiones. La API
+-- rechaza todo token emitido ANTES de esa hora. Los tokens emitidos después (el
+-- inicio de sesión con la contraseña nueva) siguen valiendo. NULL = nunca se
+-- cerraron sesiones.
+-- =============================================================================
+ALTER TABLE users ADD COLUMN sessions_revoked_at timestamptz;

@@ -207,7 +207,8 @@ export async function clearAccountLock(db: Db, userId: string): Promise<void> {
 export async function setPasswordHash(db: Db, userId: string, hash: string): Promise<void> {
   await db.query(
     `UPDATE users
-        SET password_hash = $2, failed_login_attempts = 0, locked_until = NULL
+        SET password_hash = $2, failed_login_attempts = 0, locked_until = NULL,
+            sessions_revoked_at = now()
       WHERE id = $1`,
     [userId, hash],
   );

@@ -12,7 +12,9 @@
 // consulta el usuario en la base en cada petición y usa el rol ACTUAL de la
 // base, no el que trae el token. Así, desactivar a un usuario o cambiarle el
 // rol se aplica de inmediato y no hasta que su token venza (hasta 8 horas).
-// Cuesta una consulta pequeña por petición, un precio aceptable.
+// Cuesta una consulta pequeña por petición, un precio aceptable. La misma consulta
+// dice si se cerraron sus sesiones: al restablecer una contraseña, los tokens
+// anteriores dejan de servir (migración 11).
 // =============================================================================
 import type { NextFunction, Request, Response } from 'express';
 import { env } from '../configuracion/entorno';
@@ -22,8 +24,8 @@ import {
   type Capability,
   type PermissionMap,
 } from '../configuracion/permisos';
-import { findUserById } from '../modelos/usuarios';
-import { verifyToken, type AuthPayload } from '../utilidades/token';
+import { findSessionUser } from '../modelos/usuarios';
+import { verifyToken, type AuthPayload, type VerifiedToken } from '../utilidades/token';
 
 // Le dice a TypeScript que, tras authenticate, la petición lleva `user`.
 declare global {
@@ -50,7 +52,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  let payload: AuthPayload;
+  let payload: VerifiedToken;
   try {
     payload = verifyToken(header.slice('Bearer '.length));
   } catch {
@@ -58,9 +60,17 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  // findUserById solo devuelve usuarios ACTIVOS.
-  const user = await findUserById(payload.userId);
+  // findSessionUser solo devuelve usuarios ACTIVOS.
+  const user = await findSessionUser(payload.userId);
   if (!user) {
+    reject(res, 'Token inválido o expirado.');
+    return;
+  }
+
+  // Si se cerraron sus sesiones (por ejemplo, al restablecer su contraseña), un
+  // token emitido antes ya no sirve. Se compara por segundos completos: un
+  // token emitido en el mismo segundo del cierre (el inicio de sesión nuevo) sigue valiendo.
+  if (user.sessions_revoked_epoch !== null && payload.iat < Math.floor(user.sessions_revoked_epoch)) {
     reject(res, 'Token inválido o expirado.');
     return;
   }

@@ -35,6 +35,10 @@ const DATABASE_ERRORS: Record<string, { status: number; message: string }> = {
   '23514': { status: 400, message: 'Un valor enviado no es válido.' },                // CHECK
   '22003': { status: 400, message: 'Un valor numérico está fuera del rango permitido.' },
   '23P01': { status: 409, message: 'El horario choca con otro registro existente.' }, // exclusión (RB-02)
+  '22021': { status: 400, message: 'El texto contiene caracteres que no se pueden guardar.' }, // ej.: el carácter nulo (\u0000)
+  '22001': { status: 400, message: 'Un texto enviado es demasiado largo.' },          // más largo que la columna
+  '22007': { status: 400, message: 'Una fecha u hora enviada no es válida.' },        // formato de fecha
+  '22008': { status: 400, message: 'Una fecha u hora enviada está fuera de rango.' }, // fecha fuera de rango
 };
 
 // Convierte un error en la respuesta HTTP adecuada.
