@@ -79,6 +79,22 @@ describe('RutasAplicacion', () => {
     await screen.findByText('Todavía no hay órdenes en esta sucursal.'); // deja terminar la carga
   });
 
+  it('/panel abre el panel real, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: { as_of: '2026-11-16', totals: {}, branches: [] } } }));
+    renderConSesion(<RutasAplicacion />, { route: '/panel', capabilities: ['dashboard_read'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Panel de indicadores' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText('No hay sucursales activas para mostrar.'); // deja terminar la carga
+  });
+
+  it('/recordatorios abre la bandeja real, no el aviso de construcción', async () => {
+    installFakeApi(() => ({ status: 200, data: { data: [] } }));
+    renderConSesion(<RutasAplicacion />, { route: '/recordatorios', capabilities: ['reminders_read'] });
+    expect(screen.getByRole('heading', { level: 1, name: 'Recordatorios' })).toBeInTheDocument();
+    expect(screen.queryByText('En construcción')).not.toBeInTheDocument();
+    await screen.findByText('No hay citas agendadas para hoy ni mañana en esta sucursal.');
+  });
+
   it('/pacientes/:id/expediente abre la página real del expediente', async () => {
     installFakeApi((request) => {
       if (request.url === '/pacientes/p1') {
@@ -98,7 +114,7 @@ describe('RutasAplicacion', () => {
     expect(received).toHaveLength(0);
   });
 
-  it.each(['/citas', '/ordenes-optica', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
+  it.each(['/citas', '/ordenes-optica', '/panel', '/recordatorios', '/pacientes', '/usuarios', '/sucursales', '/auditoria'])(
     'sin la capacidad, %s muestra "Sin acceso" y NO la pantalla',
     (path) => {
       renderConSesion(<RutasAplicacion />, { route: path, capabilities: [] });

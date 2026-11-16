@@ -8,8 +8,8 @@
 //               y utilidades/formatoFecha.ts.
 // Lo usa:       navegacion/RutasAplicacion.tsx (ruta "/").
 //
-// Los indicadores del día (citas, ventas...) llegan con los módulos que los
-// producen; por ahora esta pantalla no inventa números.
+// Los indicadores del día (citas, ventas...) están en el Panel de indicadores;
+// esta pantalla no inventa números.
 // =============================================================================
 import { ArrowRight, Clock, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';

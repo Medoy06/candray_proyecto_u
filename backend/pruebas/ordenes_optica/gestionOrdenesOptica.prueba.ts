@@ -149,6 +149,7 @@ describe('crear una orden', () => {
       branch_id: central.id, branch_name: expect.any(String), created_by: seller.id, created_by_name: expect.any(String),
       frame_description: 'Armazón metálico negro', lens_description: 'Lentes con antirreflejo',
       total_amount: 120, deposit_amount: 40, balance: 80, notes: 'Entrega urgente',
+      subtotal_amount: 106.19, tax_amount: 13.81,
       status: 'pending', cancellation_reason: null,
     });
     expect(response.body.data.events).toEqual([
@@ -320,6 +321,14 @@ describe('ver las órdenes', () => {
     expect(ids.indexOf(second.id)).toBeLessThan(ids.indexOf(first.id));
     expect(response.body.pagination).toMatchObject({ page: 1, page_size: 100, total: ids.length });
     for (const row of response.body.data) expect(row.branch_id).toBe(central.id);
+  });
+
+  it('la lista y el detalle traen el desglose del IVA (13 % incluido en el total)', async () => {
+    const { id } = await created();
+    const detail = (await get(seller.token, id)).body.data;
+    expect(detail).toMatchObject({ total_amount: 120, subtotal_amount: 106.19, tax_amount: 13.81 });
+    const row = (await list(seller.token, '?page_size=100')).body.data.find((r: { id: string }) => r.id === id);
+    expect(row).toMatchObject({ total_amount: 120, subtotal_amount: 106.19, tax_amount: 13.81 });
   });
 
   it('el administrador ve las de todas las sucursales', async () => {

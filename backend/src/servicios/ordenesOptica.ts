@@ -21,6 +21,8 @@
 //   - Cambiar de estado es una operación atómica: la orden se bloquea mientras se
 //     decide, de modo que dos personas no pueden avanzarla a la vez.
 //   - Crear y cada cambio de estado quedan en la bitácora, con sucursal.
+//   - Los precios incluyen IVA: toda orden que se devuelve trae además el
+//     subtotal sin IVA y el IVA contenido (utilidades/iva.ts).
 //   - La orden NO copia las medidas de la receta: guarda solo su vínculo. Quien
 //     quiera verlas las pide a la API de recetas, que exige el consentimiento.
 // =============================================================================
@@ -45,6 +47,7 @@ import {
 import { findPatient } from '../modelos/pacientes';
 import { findPrescription } from '../modelos/recetas';
 import { auditLog } from '../utilidades/auditoria';
+import { splitVat } from '../utilidades/iva';
 import { withTransaction } from '../utilidades/transaccion';
 
 // Quién actúa: usuario, sucursal activa y todas las sucursales a las que tiene acceso.
@@ -54,7 +57,16 @@ export interface OrderActor {
   allowedBranchIds: string[];
 }
 
-export type OpticalOrderDetail = OpticalOrder & { events: OpticalOrderEvent[] };
+// La orden tal como la ve quien consulta: con el desglose del IVA incluido en el total.
+export type OpticalOrderView = OpticalOrder & { subtotal_amount: number; tax_amount: number };
+export type OpticalOrderDetail = OpticalOrderView & { events: OpticalOrderEvent[] };
+
+// Agrega a la orden el subtotal (sin IVA) y el IVA. El cálculo vive aquí, en el
+// servidor, para que la pantalla solo muestre cifras ya calculadas.
+function withVat(order: OpticalOrder): OpticalOrderView {
+  const { subtotal, tax } = splitVat(order.total_amount);
+  return { ...order, subtotal_amount: subtotal, tax_amount: tax };
+}
 
 // A qué estados se puede pasar desde cada uno. Las órdenes entregadas y
 // canceladas son finales (lista vacía).
@@ -88,17 +100,18 @@ function assertVisible(order: OpticalOrder | null, actor: OrderActor): OpticalOr
 export async function search(
   query: ListOpticalOrdersQuery,
   actor: OrderActor,
-): Promise<{ rows: OpticalOrder[]; total: number }> {
+): Promise<{ rows: OpticalOrderView[]; total: number }> {
   if (query.branch_id && !actor.allowedBranchIds.includes(query.branch_id)) {
     throw new AppError('No tiene acceso a esa sucursal.', 403);
   }
-  return listOpticalOrders(query, actor.allowedBranchIds);
+  const { rows, total } = await listOpticalOrders(query, actor.allowedBranchIds);
+  return { rows: rows.map(withVat), total };
 }
 
 // Una orden con su historia de estados.
 export async function getOrder(orderId: string, actor: OrderActor): Promise<OpticalOrderDetail> {
   const order = assertVisible(await findOpticalOrder(orderId), actor);
-  return { ...order, events: await listOpticalOrderEvents(order.id) };
+  return { ...withVat(order), events: await listOpticalOrderEvents(order.id) };
 }
 
 // Crea una orden a partir de una receta. Devuelve la orden creada.

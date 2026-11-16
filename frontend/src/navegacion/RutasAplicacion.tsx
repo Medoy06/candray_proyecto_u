@@ -21,6 +21,8 @@ import { PaginaCitas } from '../paginas/citas/PaginaCitas';
 import { PaginaExpediente } from '../paginas/expediente/PaginaExpediente';
 import { PaginaInicio } from '../paginas/inicio/PaginaInicio';
 import { PaginaOrdenesOptica } from '../paginas/ordenes/PaginaOrdenesOptica';
+import { PaginaPanel } from '../paginas/panel/PaginaPanel';
+import { PaginaRecordatorios } from '../paginas/recordatorios/PaginaRecordatorios';
 import { PaginaPacientes } from '../paginas/pacientes/PaginaPacientes';
 import { PaginaSucursales } from '../paginas/sucursales/PaginaSucursales';
 import { PaginaUsuarios } from '../paginas/usuarios/PaginaUsuarios';
@@ -29,6 +31,8 @@ const PAGES: Record<RouteId, ComponentType> = {
   inicio: PaginaInicio,
   pacientes: PaginaPacientes,
   citas: PaginaCitas,
+  panel: PaginaPanel,
+  recordatorios: PaginaRecordatorios,
   'ordenes-optica': PaginaOrdenesOptica,
   usuarios: PaginaUsuarios,
   sucursales: PaginaSucursales,

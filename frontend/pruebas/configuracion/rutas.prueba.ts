@@ -81,6 +81,18 @@ describe('visibleSections', () => {
     expect(optica?.routes.map((route) => route.path)).toEqual(['/ordenes-optica']);
   });
 
+  it('Panel de indicadores lo ve quien tiene dashboard_read, en la sección General', () => {
+    expect(labelsOf(['dashboard_read'])).toEqual(['Inicio', 'Panel de indicadores']);
+    const general = visibleSections(canWith(['dashboard_read'])).find((section) => section.key === 'general');
+    expect(general?.routes.map((route) => route.path)).toEqual(['/', '/panel']);
+  });
+
+  it('Recordatorios lo ve quien tiene reminders_read, en la sección Clínico', () => {
+    expect(labelsOf(['reminders_read'])).toEqual(['Inicio', 'Recordatorios']);
+    const clinico = visibleSections(canWith(['reminders_read'])).find((section) => section.key === 'clinico');
+    expect(clinico?.routes.map((route) => route.path)).toEqual(['/recordatorios']);
+  });
+
   it('con todas las capacidades ve todas las pantallas', () => {
     expect(labelsOf([...CAPABILITIES])).toEqual(ROUTES.map((route) => route.label));
   });

@@ -18,7 +18,9 @@
 // IMPORTANTE: ocultar una opción del menú NO es seguridad. Quien realmente
 // autoriza cada acción es el backend; esto solo evita mostrar lo que daría error.
 // =============================================================================
-import { Building2, CalendarDays, Glasses, House, ScrollText, UserRound, Users, type LucideIcon } from 'lucide-react';
+import {
+  Bell, Building2, CalendarDays, Glasses, House, LayoutDashboard, ScrollText, UserRound, Users, type LucideIcon,
+} from 'lucide-react';
 import type { Capability } from './capacidades';
 
 // Secciones del menú, en el orden en que se muestran. Una sección sin opciones
@@ -55,6 +57,15 @@ export const ROUTES = [
     capability: null,
   },
   {
+    id: 'panel',
+    path: '/panel',
+    label: 'Panel de indicadores',
+    description: 'Ver los números del día de cada sucursal.',
+    section: 'general',
+    icon: LayoutDashboard,
+    capability: 'dashboard_read',
+  },
+  {
     id: 'pacientes',
     path: '/pacientes',
     label: 'Pacientes',
@@ -71,6 +82,15 @@ export const ROUTES = [
     section: 'clinico',
     icon: CalendarDays,
     capability: 'appointments_read',
+  },
+  {
+    id: 'recordatorios',
+    path: '/recordatorios',
+    label: 'Recordatorios',
+    description: 'Ver a quién se le recordaría su cita de hoy y mañana.',
+    section: 'clinico',
+    icon: Bell,
+    capability: 'reminders_read',
   },
   {
     id: 'ordenes-optica',

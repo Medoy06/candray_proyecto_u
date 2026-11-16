@@ -87,3 +87,9 @@ export const OPTICAL_ORDER_LIMITS = {
   reasonMaxLength: 200,
   maxAmount: 99999.99,
 } as const;
+
+// Límite de la bandeja de recordatorios: cuántas citas se muestran como máximo
+// (hoy y mañana en una sola sucursal; el límite evita una respuesta enorme).
+export const REMINDER_LIMITS = {
+  maxRows: 200,
+} as const;
