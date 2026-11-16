@@ -33,6 +33,10 @@ El código y la documentación mezclan español e inglés. Los nombres que ve el
 
 | Español | Inglés | Significado |
 |---|---|---|
+| Contenedor | `container` | Un programa empaquetado con todo lo que necesita para correr igual en cualquier computador. El sistema usa tres: base de datos, servidor e interfaz. |
+| Imagen | `image` | El "molde" de un contenedor: el programa ya instalado y listo. Se puede guardar en un archivo y llevar a otro computador. |
+| Docker Compose | `docker compose` | Herramienta que levanta varios contenedores juntos a partir de un solo archivo, `docker-compose.yml`. |
+| Volumen | `volume` | Espacio de Docker donde la base de datos guarda sus archivos, para que los datos sobrevivan cuando se detienen los contenedores. |
 | Migración | `migration` | Archivo SQL que crea o modifica tablas. Se aplican en orden y cada una se registra para no repetirse. |
 | Semilla | `seed` | Datos iniciales que se insertan en una base vacía, como los usuarios de demostración. |
 | Token | `token` | Texto firmado que el servidor entrega al iniciar sesión y que el navegador envía en cada petición para identificarse. |

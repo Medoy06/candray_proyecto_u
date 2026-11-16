@@ -10,7 +10,13 @@ Este guion recorre el sistema rol por rol en unos 20 minutos. Cada parte dice qu
    npm run reiniciar_demo
    ```
 
-2. Inicie el servidor (`npm run dev` en `backend/`) y la interfaz (`npm run dev` en `frontend/`), y abra http://localhost:5173.
+   Con Docker, en la carpeta principal:
+
+   ```
+   docker compose exec -e NODE_ENV=development backend npm run reiniciar_demo
+   ```
+
+2. Inicie el servidor (`npm run dev` en `backend/`) y la interfaz (`npm run dev` en `frontend/`), y abra http://localhost:5173. Con Docker basta `docker compose up -d` y abrir http://localhost:8080.
 3. Use dos ventanas del navegador (una normal y una privada) para la parte de sesiones cerradas, en el paso 4.
 4. Reinicie la demostración si hizo pruebas: el guion cuenta con los datos de ejemplo y con una bitácora vacía.
 

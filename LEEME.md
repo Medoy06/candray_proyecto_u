@@ -50,6 +50,14 @@ npm run dev
 
 La aplicación queda en http://localhost:5173.
 
+Si prefiere no instalar nada más que Docker (por ejemplo, para presentar en otro computador), todo el sistema corre con un solo comando:
+
+```
+docker compose up -d --build
+```
+
+Y queda en http://localhost:8080. Los detalles están en el Camino C de la guía de instalación.
+
 ## Cuentas de demostración
 
 La contraseña de todas las cuentas es `Candray2026!`. Solo funciona en la base de demostración.
@@ -75,6 +83,7 @@ Existe además la sucursal Metrosur, que está inactiva a propósito para mostra
 | `backend/` | El servidor (API). Cada archivo de `src/` pertenece a una capa: modelos, servicios, controladores, rutas, esquemas e intermediarios. Sus pruebas están en `pruebas/`. |
 | `frontend/` | La interfaz web. Las páginas están en `src/paginas/`, los componentes reutilizables en `src/componentes/` y las pruebas en `pruebas/`. |
 | `base_datos/` | Las migraciones (`migraciones/`) que crean las tablas y la semilla (`semillas/`) con los datos de demostración. |
+| `docker/` | Lo necesario para correr todo en contenedores (el archivo `docker-compose.yml` está en la carpeta principal). |
 | `scripts/` | Comandos de apoyo: aplicar migraciones, reiniciar la demostración, instalar el proyecto y verificar que todo funcione. |
 | `docs/` | Instalación, convenciones de código, glosario y registro de decisiones. |
 

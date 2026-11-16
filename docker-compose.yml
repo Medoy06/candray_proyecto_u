@@ -1,0 +1,79 @@
+# =============================================================================
+# docker-compose.yml
+# Qué hace:     levanta el sistema completo con un solo comando:
+#                 base_datos  PostgreSQL con los datos guardados en un volumen;
+#                 backend     el servidor (API);
+#                 frontend    la interfaz (nginx), el ÚNICO servicio que se abre
+#                             al exterior: http://localhost:8080
+#
+# Uso:          docker compose up -d --build        (la primera vez)
+#               docker compose up -d                (las siguientes)
+#               docker compose down                 (detener; conserva los datos)
+# Detalles en docker/LEEME.md y en docs/instalacion.md.
+#
+# Variables opcionales (en la terminal o en un archivo .env junto a este):
+#   PUERTO           puerto donde se abre la interfaz (por defecto 8080)
+#   PERFIL_PERMISOS  "demostracion" (por defecto) o "estricto"
+#   DB_PASSWORD      contraseña interna de la base (por defecto: candray_demo)
+#   JWT_SECRET       firma de las sesiones (por defecto: se genera una al azar)
+# =============================================================================
+name: candray
+
+services:
+  base_datos:
+    build:
+      context: .
+      dockerfile: docker/postgres.Dockerfile
+    image: candray/base_datos:1.0
+    restart: unless-stopped
+    environment:
+      # Administrador de PostgreSQL: solo se usa dentro del contenedor, al crear la base.
+      POSTGRES_PASSWORD: administrador_interno
+      DB_PASSWORD: ${DB_PASSWORD:-candray_demo}
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      # -h 127.0.0.1 por red: mientras PostgreSQL se prepara solo escucha por socket,
+      # y así el servicio no se da por listo antes de terminar de crear la base.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U candray_user -d candray_mockup"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    image: candray/backend:1.0
+    restart: unless-stopped
+    depends_on:
+      base_datos:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DB_HOST: base_datos
+      DB_PORT: "5432"
+      DB_NAME: candray_mockup
+      DB_USER: candray_user
+      DB_PASSWORD: ${DB_PASSWORD:-candray_demo}
+      JWT_SECRET: ${JWT_SECRET:-}
+      BCRYPT_ROUNDS: "10"
+      PERFIL_PERMISOS: ${PERFIL_PERMISOS:-demostracion}
+      # Detrás de nginx todas las peticiones llegan desde una misma dirección, así que
+      # el tope de inicios de sesión se sube para que una demostración no se bloquee.
+      AUTH_RATE_LIMIT_MAX: "100"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    image: candray/frontend:1.0
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${PUERTO:-8080}:80"
+
+volumes:
+  datos_postgres:

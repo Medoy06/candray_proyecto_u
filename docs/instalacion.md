@@ -2,6 +2,8 @@
 
 Esta guía explica cómo dejar el sistema funcionando en un computador con Windows. Hay dos caminos: usar WSL, que permite correr Ubuntu dentro de Windows, o instalar todo directamente en Windows. Cada camino tiene una instalación automática con un script y una instalación manual paso a paso. Si algo falla con el script, los pasos manuales muestran exactamente lo que el script hace.
 
+Hay además un tercer camino con Docker (Camino C): no instala Node ni PostgreSQL, solo Docker, y es el más sencillo para llevar el sistema a otro computador, por ejemplo el de una presentación.
+
 ## Qué se necesita
 
 Se necesita Node.js 22 o superior, PostgreSQL 16 y Git. El proyecto ocupa poco espacio, pero las dependencias de Node pesan unos cientos de megabytes, así que conviene tener al menos 1 GB libre.
@@ -188,6 +190,62 @@ El script pregunta la contraseña del usuario `postgres`, crea el usuario y las 
 
 ---
 
+## Camino C: Docker (el más simple para presentar en otro computador)
+
+Con Docker, el sistema completo (base de datos, servidor e interfaz) corre en contenedores y la única instalación necesaria es Docker. No hace falta Node, PostgreSQL ni configurar nada.
+
+### C1. Instalar Docker
+
+En Windows y en Mac se instala Docker Desktop desde https://www.docker.com/products/docker-desktop y se deja abierto (el icono de la ballena debe estar quieto). En Linux se instala Docker Engine con el plugin de Compose. Para comprobarlo:
+
+```
+docker --version
+docker compose version
+```
+
+### C2. Iniciar el sistema desde el código
+
+En la carpeta principal del proyecto:
+
+```
+docker compose up -d --build
+```
+
+La primera vez descarga las imágenes base y construye el sistema, lo que tarda unos minutos y necesita internet. Cuando termina, abra http://localhost:8080 e inicie sesión con una cuenta de demostración del archivo [LEEME.md](../LEEME.md). Al iniciar, el servidor aplica las migraciones y, si la base está vacía, carga los datos de demostración, así que no hay nada más que preparar.
+
+### C3. Llevarlo a otro computador sin internet
+
+En el computador donde ya funciona, guarde las imágenes en un solo archivo:
+
+```
+sh docker/exportar_imagenes.sh
+```
+
+Copie `candray-imagenes.tar.gz` y `docker-compose.yml` al otro computador (en una memoria USB, por ejemplo). Allá, con Docker abierto y en la carpeta donde dejó los dos archivos:
+
+```
+docker load -i candray-imagenes.tar.gz
+docker compose up -d --no-build
+```
+
+Las imágenes solo sirven en el mismo tipo de procesador en que se construyeron. Si construyó en un PC Intel/AMD y presenta en un Mac con chip Apple (o al revés), mejor copie todo el proyecto y use el comando de C2 en el computador de destino, con internet.
+
+### C4. Uso diario
+
+| Para | Comando |
+|---|---|
+| Iniciar (después de la primera vez) | `docker compose up -d` |
+| Detener, conservando los datos | `docker compose down` |
+| Ver qué está pasando | `docker compose logs -f backend` |
+| Dejar la demostración como al inicio (hágalo antes de presentar) | `docker compose exec -e NODE_ENV=development backend npm run reiniciar_demo` |
+| Borrar todo, datos incluidos, y empezar de cero | `docker compose down -v` |
+
+Los datos viven en un volumen de Docker y sobreviven a `down`. Las citas de la demostración se crean relativas al día en que se cargó la base: si pasaron días desde la última vez, reinicie la demostración (cuarta fila) antes de presentar, para que la agenda de hoy tenga citas.
+
+Si el puerto 8080 está ocupado, use otro: `PUERTO=9090 docker compose up -d` (en PowerShell: `$env:PUERTO=9090; docker compose up -d`) y abra http://localhost:9090.
+
+---
+
 ## Iniciar el sistema
 
 El sistema son dos programas que corren al mismo tiempo, así que se necesitan dos terminales abiertas. En la primera se inicia el servidor:
@@ -268,5 +326,11 @@ npm run reiniciar_demo
 **Aparece `EADDRINUSE` al iniciar el servidor.** Algo más está usando el puerto 3000, a veces otra copia del mismo servidor que quedó abierta. Ciérrela, o cambie `PORT` en `backend/.env` y el destino del proxy en `frontend/vite.config.ts`.
 
 **Una pantalla da error 500 o "tabla no existe" después de actualizar el proyecto.** Falta aplicar una migración nueva: ejecute `npm run migrar` dentro de `backend/`.
+
+**Con Docker, `docker compose up` falla con "Cannot connect to the Docker daemon" o similar.** Docker Desktop no está abierto. Ábralo y espere a que termine de iniciar.
+
+**Con Docker, la página no carga justo después de iniciar.** El servidor tarda unos segundos en preparar la base la primera vez. Revise `docker compose logs backend`: debe terminar con "API de Candray escuchando".
+
+**Con Docker aparece `exec /entrada.sh: no such file or directory`.** El archivo se descargó con saltos de línea de Windows. Las imágenes ya los corrigen al construir, pero si ocurre, ejecute `docker compose build --no-cache`.
 
 **El inicio de sesión responde que la cuenta está bloqueada.** Cinco intentos fallidos bloquean la cuenta quince minutos. Se puede esperar, desbloquearla desde la pantalla de Usuarios con la cuenta de administrador, o ejecutar `npm run reiniciar_demo`.

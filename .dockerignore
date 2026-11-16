@@ -1,0 +1,11 @@
+# Lo que Docker NO copia al construir las imágenes (acelera la construcción y
+# evita subir secretos o carpetas pesadas).
+.git
+**/node_modules
+**/dist
+**/build
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+docs

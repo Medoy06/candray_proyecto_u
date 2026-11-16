@@ -12,3 +12,6 @@ build/
 *.log
 .DS_Store
 Thumbs.db
+
+# Imágenes de Docker exportadas para llevar a otro computador (pesan cientos de MB)
+candray-imagenes.tar.gz
