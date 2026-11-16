@@ -9,7 +9,8 @@
 //
 // Entra quien puede buscar pacientes (médicos, recepción, ventas), pero los
 // botones de modificar solo los ve quien tiene patients_manage, y el botón
-// "Expediente" solo quien tiene medical_records_read: ocultarlos es comodidad;
+// "Expediente" solo quien tiene medical_records_read y "Consentimiento" solo
+// quien tiene consents_manage: ocultarlos es comodidad;
 // quien realmente decide es el backend.
 // No hay "eliminar": un paciente con historial no se borra, se desactiva.
 // Igual que las demás páginas, esta es la "directora": guarda la búsqueda, la
@@ -30,10 +31,12 @@ import { usePacientes } from '../../ganchos/usePacientes';
 import { useSesion } from '../../ganchos/useSesion';
 import { useValorConRetraso } from '../../ganchos/useValorConRetraso';
 import { recordPath } from '../../configuracion/rutas';
+import { revokeConsent, type Consent } from '../../servicios/consentimientos';
 import { EMPTY_PATIENT_FILTERS, updatePatient, type Patient, type PatientFilters } from '../../servicios/pacientes';
 import { getApiErrorMessage } from '../../utilidades/errorApi';
 import { FiltrosPacientes } from './FiltrosPacientes';
 import { FormularioPaciente } from './FormularioPaciente';
+import { ModalConsentimiento } from './ModalConsentimiento';
 import { TablaPacientes } from './TablaPacientes';
 
 const SEARCH_DELAY_MS = 300;
@@ -42,12 +45,15 @@ export function PaginaPacientes() {
   const { can } = useSesion();
   const canManage = can('patients_manage');
   const canOpenRecord = can('medical_records_read');
+  const canConsent = can('consents_manage');
   const navigate = useNavigate();
   const [filters, setFilters] = useState<PatientFilters>(EMPTY_PATIENT_FILTERS);
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [toggling, setToggling] = useState<Patient | null>(null);
+  const [consentOf, setConsentOf] = useState<Patient | null>(null);
+  const [revokingConsent, setRevokingConsent] = useState<{ patient: Patient; consent: Consent } | null>(null);
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');
 
@@ -63,6 +69,7 @@ export function PaginaPacientes() {
   function finish(message: string) {
     setCreating(false);
     setEditing(null);
+    setConsentOf(null);
     setActionError('');
     setNotice(message);
     reload();
@@ -78,6 +85,26 @@ export function PaginaPacientes() {
       finish(`${target.full_name} fue ${target.is_active ? 'desactivado' : 'activado'}.`);
     } catch (toggleError: unknown) {
       setActionError(getApiErrorMessage(toggleError, 'No se pudo cambiar el estado del paciente.'));
+    }
+  }
+
+  // Revocar un consentimiento: la ventana del consentimiento se cierra y se
+  // pregunta aquí (un ConfirmDialog no va dentro de otra ventana).
+  function askRevokeConsent(consent: Consent) {
+    if (consentOf === null) return;
+    setRevokingConsent({ patient: consentOf, consent });
+    setConsentOf(null);
+  }
+
+  async function confirmRevokeConsent() {
+    const target = revokingConsent;
+    if (target === null) return;
+    setRevokingConsent(null); // se cierra de inmediato: evita un doble clic
+    try {
+      await revokeConsent(target.patient.id, target.consent.id);
+      finish(`Se revocó el consentimiento de ${target.patient.full_name}.`);
+    } catch (revokeError: unknown) {
+      setActionError(getApiErrorMessage(revokeError, 'No se pudo revocar el consentimiento.'));
     }
   }
 
@@ -136,7 +163,9 @@ export function PaginaPacientes() {
             patients={data.rows}
             canManage={canManage}
             canOpenRecord={canOpenRecord}
+            canConsent={canConsent}
             onOpenRecord={(patient) => navigate(recordPath(patient.id))}
+            onConsent={(patient) => open(setConsentOf, patient)}
             onEdit={(patient) => open(setEditing, patient)}
             onToggleActive={setToggling}
           />
@@ -161,6 +190,23 @@ export function PaginaPacientes() {
           onSaved={(saved) => finish(`Cambios guardados para ${saved.full_name}.`)}
         />
       )}
+      {consentOf !== null && (
+        <ModalConsentimiento
+          patient={consentOf}
+          onClose={() => setConsentOf(null)}
+          onSaved={finish}
+          onRevoke={askRevokeConsent}
+        />
+      )}
+      <ConfirmDialog
+        isOpen={revokingConsent !== null}
+        title="Revocar consentimiento"
+        message={`La óptica dejará de poder ver la receta de ${revokingConsent?.patient.full_name ?? ''}.`}
+        confirmLabel="Revocar"
+        danger
+        onConfirm={() => void confirmRevokeConsent()}
+        onCancel={() => setRevokingConsent(null)}
+      />
       <ConfirmDialog
         isOpen={toggling !== null}
         title={toggling?.is_active ? 'Desactivar paciente' : 'Activar paciente'}

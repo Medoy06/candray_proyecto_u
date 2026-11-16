@@ -8,10 +8,10 @@
 // Lo usa:       paginas/pacientes/PaginaPacientes.tsx.
 //
 // No decide nada: avisa a la página cuando se pulsa una acción. La columna de
-// acciones solo existe si la persona puede abrir expedientes (médicos) o
-// modificar pacientes (recepción); quien solo consulta ve la tabla sin botones.
+// acciones solo existe si la persona puede abrir expedientes (médicos), manejar
+// consentimientos (médicos y recepción) o modificar pacientes (recepción); quien solo consulta ve la tabla sin botones.
 // =============================================================================
-import { FileText, Pencil } from 'lucide-react';
+import { FileText, Pencil, ShieldCheck } from 'lucide-react';
 import { Boton } from '../../componentes/ui/Boton';
 import { Etiqueta } from '../../componentes/ui/Etiqueta';
 import { Tabla, type TablaColumna } from '../../componentes/ui/Tabla';
@@ -22,12 +22,23 @@ interface TablaPacientesProps {
   patients: Patient[];
   canManage: boolean;
   canOpenRecord: boolean; // puede abrir el expediente clínico (médicos y administración)
+  canConsent: boolean;    // puede registrar y revocar consentimientos (médicos y recepción)
   onOpenRecord: (patient: Patient) => void;
+  onConsent: (patient: Patient) => void;
   onEdit: (patient: Patient) => void;
   onToggleActive: (patient: Patient) => void;
 }
 
-export function TablaPacientes({ patients, canManage, canOpenRecord, onOpenRecord, onEdit, onToggleActive }: TablaPacientesProps) {
+export function TablaPacientes({
+  patients,
+  canManage,
+  canOpenRecord,
+  canConsent,
+  onOpenRecord,
+  onConsent,
+  onEdit,
+  onToggleActive,
+}: TablaPacientesProps) {
   const columns: TablaColumna<Patient>[] = [
     { id: 'record', header: 'Expediente', noWrap: true, cell: (patient) => patient.record_number },
     {
@@ -53,8 +64,9 @@ export function TablaPacientes({ patients, canManage, canOpenRecord, onOpenRecor
   ];
 
   // La columna existe si la persona puede hacer algo en ella: abrir el expediente
-  // (médicos) o modificar al paciente (recepción). Quien solo consulta no la ve.
-  if (canManage || canOpenRecord) {
+  // (médicos), manejar el consentimiento (médicos y recepción) o modificar al
+  // paciente (recepción). Quien solo consulta no la ve.
+  if (canManage || canOpenRecord || canConsent) {
     columns.push({
       id: 'actions',
       header: 'Acciones',
@@ -65,6 +77,17 @@ export function TablaPacientes({ patients, canManage, canOpenRecord, onOpenRecor
             <Boton size="sm" onClick={() => onOpenRecord(patient)} aria-label={`Abrir el expediente de ${patient.full_name}`}>
               <FileText className="size-4" aria-hidden="true" />
               Expediente
+            </Boton>
+          )}
+          {canConsent && (
+            <Boton
+              size="sm"
+              variant="secundario"
+              onClick={() => onConsent(patient)}
+              aria-label={`Consentimiento de ${patient.full_name}`}
+            >
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Consentimiento
             </Boton>
           )}
           {canManage && (

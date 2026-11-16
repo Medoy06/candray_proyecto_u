@@ -25,3 +25,7 @@ export const MIN_PASSWORD_LENGTH = 8;
 // REFERRAL_MAX_DAYS del backend.
 export const REFERRAL_DEFAULT_DAYS = 14;
 export const REFERRAL_MAX_DAYS = 30;
+
+// Consentimiento: cuánto puede medir la nota de "cómo se obtuvo". Igual a
+// CONSENT_NOTE_MAX_LENGTH del backend.
+export const CONSENT_NOTE_MAX_LENGTH = 200;

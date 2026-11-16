@@ -28,6 +28,9 @@ describe('actionLabel y entityLabel', () => {
     expect(entityLabel('patient')).toBe('Paciente');
     expect(entityLabel('medical_record')).toBe('Expediente');
     expect(entityLabel('referral')).toBe('Interconsulta');
+    expect(entityLabel('consent')).toBe('Consentimiento');
+    expect(actionLabel('consent_granted')).toBe('Consentimiento registrado');
+    expect(actionLabel('consent_revoked')).toBe('Consentimiento revocado');
   });
 
   it('un código desconocido se muestra tal cual, no se oculta', () => {

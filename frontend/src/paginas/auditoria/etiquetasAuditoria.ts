@@ -29,6 +29,8 @@ const ACTION_LABELS: Record<string, string> = {
   record_amended: 'Nota de expediente enmendada',
   referral_granted: 'Interconsulta otorgada',
   referral_revoked: 'Interconsulta revocada',
+  consent_granted: 'Consentimiento registrado',
+  consent_revoked: 'Consentimiento revocado',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -38,6 +40,7 @@ const ENTITY_LABELS: Record<string, string> = {
   patient: 'Paciente',
   medical_record: 'Expediente',
   referral: 'Interconsulta',
+  consent: 'Consentimiento',
 };
 
 // Nombre de cada dato del detalle. Los datos que no aparecen aquí y son

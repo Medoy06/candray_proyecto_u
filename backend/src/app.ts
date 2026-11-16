@@ -23,6 +23,7 @@ import authRoutes from './rutas/autenticacion';
 import appointmentRoutes from './rutas/citas';
 import availabilityRoutes from './rutas/disponibilidad';
 import recordRoutes from './rutas/expedientes';
+import consentRoutes from './rutas/consentimientos';
 import referralRoutes from './rutas/interconsultas';
 import scheduleRoutes from './rutas/horarios';
 import patientRoutes from './rutas/pacientes';
@@ -95,11 +96,12 @@ export function createApp(options: AppOptions = {}): Express {
   app.use('/api/auth', authRoutes);
   app.use('/api/usuarios', userRoutes);
   app.use('/api/sucursales', branchRoutes);
-  // El expediente y las interconsultas van ANTES que los pacientes: el router
+  // El expediente, las interconsultas y los consentimientos van ANTES que los pacientes: el router
   // de pacientes exige patients_search a todo lo que cuelga de /api/pacientes,
-  // y ellos tienen sus propias capacidades (medical_records_*, referrals_manage).
+  // y ellos tienen sus propias capacidades (medical_records_*, referrals_manage, consents_*).
   app.use('/api/pacientes/:patientId/expediente', recordRoutes);
   app.use('/api/pacientes/:patientId/interconsultas', referralRoutes);
+  app.use('/api/pacientes/:patientId/consentimientos', consentRoutes);
   app.use('/api/pacientes', patientRoutes);
   app.use('/api/horarios', scheduleRoutes);
   app.use('/api/disponibilidad', availabilityRoutes);

@@ -130,3 +130,20 @@ export async function insertReferral(input: ReferralInput) {
     [input.patientId, input.providerId, input.grantedBy, input.reason ?? 'Segunda opinión', input.expiresAt ?? null],
   );
 }
+
+// Registra un consentimiento de un paciente con SQL directo (sin pasar por la API).
+// `revoked` lo deja ya revocado (por quién y cuándo).
+export async function insertConsent(input: {
+  patientId: string;
+  grantedBy: string;
+  note?: string | null;
+  revokedBy?: string;
+}) {
+  return pool.query(
+    `INSERT INTO consents (patient_id, granted_by, note, revoked_at, revoked_by)
+     VALUES ($1, $2, $3, CASE WHEN $4::uuid IS NULL THEN NULL ELSE now() AT TIME ZONE 'America/El_Salvador' END, $4)
+     RETURNING id`,
+    [input.patientId, input.grantedBy, input.note ?? null, input.revokedBy ?? null],
+  );
+}
+
