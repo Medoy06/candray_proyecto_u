@@ -147,3 +147,32 @@ export async function insertConsent(input: {
   );
 }
 
+// Inserta una receta óptica con SQL directo. Por defecto: OD -1.50 y OI -1.25 sin cilindro.
+// `columns` cambia o agrega columnas (por ejemplo { od_cylinder: -0.5, od_axis: 90 }).
+export async function insertPrescription(input: {
+  patientId: string;
+  doctorId: string;
+  branchId: string;
+  recordId: string;
+  supersedesId?: string | null;
+  columns?: Record<string, unknown>;
+}) {
+  const values: Record<string, unknown> = {
+    patient_id: input.patientId,
+    doctor_id: input.doctorId,
+    branch_id: input.branchId,
+    record_id: input.recordId,
+    supersedes_id: input.supersedesId ?? null,
+    od_sphere: -1.5,
+    oi_sphere: -1.25,
+    ...input.columns,
+  };
+  const names = Object.keys(values);
+  return pool.query<{ id: string }>(
+    `INSERT INTO prescriptions (${names.join(', ')})
+     VALUES (${names.map((_, index) => `$${index + 1}`).join(', ')})
+     RETURNING id`,
+    names.map((name) => values[name]),
+  );
+}
+

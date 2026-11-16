@@ -65,3 +65,16 @@ export const REFERRAL_MAX_DAYS = 30;
 // más largo se imprime recortado a las más recientes y la respuesta lo avisa
 // ("truncated"), en vez de armar un documento sin límite.
 export const RECORD_PRINT_MAX_ENTRIES = 500;
+
+// --- Receta óptica ----------------------------------------------------------
+// Límites de las medidas (en dioptrías, y milímetros la distancia pupilar) y
+// del texto libre. Son los mismos que revisa la tabla prescriptions
+// (migración 09); aquí se repiten para dar un mensaje claro antes de llegar a la base.
+export const PRESCRIPTION_LIMITS = {
+  sphere: { min: -20, max: 20 },
+  cylinder: { min: -8, max: 8 },
+  axis: { min: 1, max: 180 },
+  addition: { min: 0.25, max: 4 },
+  pupillaryDistance: { min: 40, max: 80 },
+  lensNotesMaxLength: 500,
+} as const;

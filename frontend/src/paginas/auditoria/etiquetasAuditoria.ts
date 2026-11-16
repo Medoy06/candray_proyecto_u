@@ -31,6 +31,10 @@ const ACTION_LABELS: Record<string, string> = {
   referral_revoked: 'Interconsulta revocada',
   consent_granted: 'Consentimiento registrado',
   consent_revoked: 'Consentimiento revocado',
+  prescription_issued: 'Receta emitida',
+  prescription_replaced: 'Receta reemplazada',
+  prescription_viewed: 'Receta consultada',
+  prescription_access_denied: 'Acceso a la receta denegado',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -41,6 +45,7 @@ const ENTITY_LABELS: Record<string, string> = {
   medical_record: 'Expediente',
   referral: 'Interconsulta',
   consent: 'Consentimiento',
+  prescription: 'Receta',
 };
 
 // Nombre de cada dato del detalle. Los datos que no aparecen aquí y son
@@ -71,8 +76,12 @@ const KEY_LABELS: Record<string, string> = {
 
 // Valores de la bitácora que son códigos y se leen mejor traducidos.
 const VALUE_LABELS: Record<string, Record<string, string>> = {
-  access: { role: 'Por su rol', appointment: 'Por una cita', referral: 'Por interconsulta' },
-  reason: { no_relation: 'Sin cita ni interconsulta', check_failed: 'Falló la verificación' },
+  access: { role: 'Por su rol', appointment: 'Por una cita', referral: 'Por interconsulta', consent: 'Por consentimiento' },
+  reason: {
+    no_relation: 'Sin cita ni interconsulta',
+    check_failed: 'Falló la verificación',
+    no_consent: 'Sin consentimiento del paciente',
+  },
 };
 
 // Identificadores internos: no le dicen nada a quien lee la bitácora.
@@ -83,6 +92,8 @@ const HIDDEN_KEYS = new Set([
   'provider_id',
   'appointment_id',
   'amends_id',
+  'record_id',
+  'supersedes_id',
 ]);
 
 // Los textos largos se cortan para que una fila no ocupe media pantalla.

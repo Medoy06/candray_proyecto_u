@@ -199,10 +199,13 @@ describe('medical_records: solo se agrega (RB-03)', () => {
     });
   });
 
-  it('aunque se devuelva el permiso de TRUNCATE, el disparador lo frena', async () => {
+  it('aunque se devuelva el permiso de TRUNCATE, se frena', async () => {
+    // Lo frena el disparador (mensaje de "enmienda") o, ahora que las recetas
+    // apuntan a las notas (migración 09), PostgreSQL mismo, que no deja vaciar una
+    // tabla a la que otra apunta con una clave foránea. Las dos protecciones valen.
     await pool.query('GRANT TRUNCATE ON medical_records TO CURRENT_USER');
     try {
-      await expect(pool.query('TRUNCATE medical_records')).rejects.toThrow(/enmienda/);
+      await expect(pool.query('TRUNCATE medical_records')).rejects.toThrow(/enmienda|referenced in a foreign key/);
     } finally {
       await pool.query('REVOKE TRUNCATE ON medical_records FROM CURRENT_USER');
     }

@@ -31,6 +31,14 @@ describe('actionLabel y entityLabel', () => {
     expect(entityLabel('consent')).toBe('Consentimiento');
     expect(actionLabel('consent_granted')).toBe('Consentimiento registrado');
     expect(actionLabel('consent_revoked')).toBe('Consentimiento revocado');
+    expect(actionLabel('prescription_issued')).toBe('Receta emitida');
+    expect(actionLabel('prescription_replaced')).toBe('Receta reemplazada');
+    expect(actionLabel('prescription_viewed')).toBe('Receta consultada');
+    expect(actionLabel('prescription_access_denied')).toBe('Acceso a la receta denegado');
+    expect(entityLabel('prescription')).toBe('Receta');
+    expect(summarizeDetail({ access: 'consent' })).toEqual(['Acceso: Por consentimiento']);
+    expect(summarizeDetail({ reason: 'no_consent' })).toEqual(['Motivo: Sin consentimiento del paciente']);
+    expect(summarizeDetail({ patient_id: 'x', record_id: 'y', supersedes_id: 'z' })).toEqual([]);
   });
 
   it('un código desconocido se muestra tal cual, no se oculta', () => {
