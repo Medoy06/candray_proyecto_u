@@ -14,6 +14,8 @@
 // Lo que sí se decide aquí es qué botones mostrar: escribir y enmendar solo
 // aparecen cuando se tiene la capacidad Y el acceso es por atender al paciente
 // (quien entra por interconsulta o como administrador solo lee).
+// La sección de interconsultas (dar y revocar acceso a otro médico) sigue la misma
+// regla y vive en su propio componente.
 // Cada vez que se carga el historial queda una lectura en la bitácora, por eso
 // solo se vuelve a cargar al cambiar de página o después de guardar.
 // Igual que las demás páginas, esta es la "directora": guarda la página, qué
@@ -36,6 +38,7 @@ import { AvisoAcceso } from './AvisoAcceso';
 import { FormularioEnmienda } from './FormularioEnmienda';
 import { FormularioNota } from './FormularioNota';
 import { LineaTiempoExpediente } from './LineaTiempoExpediente';
+import { SeccionInterconsultas } from './SeccionInterconsultas';
 
 export function PaginaExpediente() {
   const { patientId = '' } = useParams();
@@ -50,6 +53,9 @@ export function PaginaExpediente() {
 
   // Escribir y enmendar: la capacidad no basta, el acceso debe ser por atender al paciente.
   const canWrite = can('medical_records_author') && history.data?.access.reason === 'appointment';
+
+  // Dar interconsultas: la capacidad y atender al paciente (una interconsulta recibida no se puede pasar a otro).
+  const canGrantReferrals = can('referrals_manage') && history.data?.access.reason === 'appointment';
 
   // Después de guardar: cerrar la ventana, avisar y volver a la primera página (lo más nuevo).
   function finish(message: string) {
@@ -89,6 +95,8 @@ export function PaginaExpediente() {
       {history.data !== null && (
         <>
           <AvisoAcceso access={history.data.access} />
+
+          {canGrantReferrals && <SeccionInterconsultas patientId={patientId} />}
 
           {canWrite && (
             <div className="mb-4 flex justify-end">

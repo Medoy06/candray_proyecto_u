@@ -19,3 +19,9 @@ export const TIME_ZONE = 'America/El_Salvador';
 
 // Longitud mínima de una contraseña. Igual a MIN_PASSWORD_LENGTH del backend.
 export const MIN_PASSWORD_LENGTH = 8;
+
+// Interconsulta: cuántos días dura el acceso que un médico le da a otro si no
+// indica otra cosa, y el máximo permitido. Iguales a REFERRAL_DEFAULT_DAYS y
+// REFERRAL_MAX_DAYS del backend.
+export const REFERRAL_DEFAULT_DAYS = 14;
+export const REFERRAL_MAX_DAYS = 30;
