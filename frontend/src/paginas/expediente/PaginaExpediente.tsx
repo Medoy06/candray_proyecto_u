@@ -2,7 +2,7 @@
 // PaginaExpediente.tsx
 // Qué hace:     el expediente clínico de UN paciente: su historial de consultas
 //               (de todas las sucursales), y para el médico que lo atiende,
-//               escribir la nota de una consulta y enmendar notas.
+//               escribir la nota de una consulta, enmendar notas y emitir recetas.
 // Depende de:   ganchos/useExpediente.ts, usePaciente.ts, useSesion.ts,
 //               componentes/ui y los componentes de esta carpeta.
 // Lo usa:       navegacion/RutasAplicacion.tsx (ruta del expediente, capacidad
@@ -19,13 +19,17 @@
 // diálogo de impresión del navegador. Solo lo ve el médico que atiende al paciente.
 // La sección de interconsultas (dar y revocar acceso a otro médico) sigue la misma
 // regla y vive en su propio componente.
+// Recetas: quien tiene la capacidad de leerlas ve la tarjeta "Recetas". El médico que
+// atiende al paciente además puede emitir la receta de una de SUS notas de consulta
+// (botón en la nota), reemplazar la vigente e imprimirla. La receta impresa sale de
+// los datos ya cargados: la lectura ya quedó en la bitácora al cargar la tarjeta.
 // Cada vez que se carga el historial queda una lectura en la bitácora, por eso
 // solo se vuelve a cargar al cambiar de página o después de guardar.
 // Igual que las demás páginas, esta es la "directora": guarda la página, qué
 // ventana está abierta y qué aviso se muestra.
 // =============================================================================
 import { ArrowLeft, Plus, Printer } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AlertaError } from '../../componentes/ui/AlertaError';
 import { AlertaExito } from '../../componentes/ui/AlertaExito';
@@ -33,18 +37,24 @@ import { Boton } from '../../componentes/ui/Boton';
 import { EncabezadoPagina } from '../../componentes/ui/EncabezadoPagina';
 import { Paginacion } from '../../componentes/ui/Paginacion';
 import { useExpediente } from '../../ganchos/useExpediente';
+import { useImprimirAlMostrar } from '../../ganchos/useImprimirAlMostrar';
 import { usePaciente } from '../../ganchos/usePaciente';
+import { useRecetas } from '../../ganchos/useRecetas';
 import { useSesion } from '../../ganchos/useSesion';
 import { getRecordPrintout, type RecordEntry, type RecordPrintout } from '../../servicios/expedientes';
+import type { Prescription } from '../../servicios/recetas';
 import { getApiErrorMessage } from '../../utilidades/errorApi';
 import { todayText } from '../../utilidades/fechaLocal';
 import { formatDate } from '../../utilidades/formatoFecha';
 import { AvisoAcceso } from './AvisoAcceso';
 import { FormularioEnmienda } from './FormularioEnmienda';
 import { FormularioNota } from './FormularioNota';
+import { FormularioReceta, type PrescriptionTarget } from './FormularioReceta';
 import { LineaTiempoExpediente } from './LineaTiempoExpediente';
 import { SeccionInterconsultas } from './SeccionInterconsultas';
+import { SeccionRecetas } from './SeccionRecetas';
 import { VistaImpresion } from './VistaImpresion';
+import { VistaRecetaImpresion } from './VistaRecetaImpresion';
 
 export function PaginaExpediente() {
   const { patientId = '' } = useParams();
@@ -56,9 +66,13 @@ export function PaginaExpediente() {
   const [printout, setPrintout] = useState<RecordPrintout | null>(null);
   const [printLoading, setPrintLoading] = useState(false);
   const [printError, setPrintError] = useState('');
+  const [prescribing, setPrescribing] = useState<PrescriptionTarget | null>(null);
+  const [prescriptionToPrint, setPrescriptionToPrint] = useState<Prescription | null>(null);
 
   const patient = usePaciente(patientId);
   const history = useExpediente(patientId, page);
+  const canReadPrescriptions = can('prescriptions_read');
+  const prescriptions = useRecetas(patientId, canReadPrescriptions);
 
   // Escribir y enmendar: la capacidad no basta, el acceso debe ser por atender al paciente.
   const canWrite = can('medical_records_author') && history.data?.access.reason === 'appointment';
@@ -68,6 +82,19 @@ export function PaginaExpediente() {
 
   // Imprimir: la capacidad y atender al paciente (el servidor lo vuelve a exigir).
   const canPrint = can('medical_records_output') && history.data?.access.reason === 'appointment';
+
+  // Emitir, reemplazar e imprimir recetas: la capacidad y atender al paciente (el servidor lo vuelve a exigir).
+  const canAuthorPrescriptions = can('prescriptions_author') && history.data?.access.reason === 'appointment';
+
+  // "Emitir receta" aparece en las notas de consulta propias que todavía no tienen la suya
+  // (y solo cuando ya se cargaron las recetas, para no ofrecerla por error).
+  const prescribedRecordIds = new Set(prescriptions.data?.rows.map((row) => row.record_id));
+  const canPrescribeFrom = (entry: RecordEntry): boolean =>
+    canAuthorPrescriptions &&
+    prescriptions.data !== null &&
+    entry.amends_id === null &&
+    entry.doctor_id === user?.id &&
+    !prescribedRecordIds.has(entry.id);
 
   // Pide el expediente completo (queda en la bitácora) y deja listo el documento.
   async function preparePrint() {
@@ -82,15 +109,20 @@ export function PaginaExpediente() {
     }
   }
 
-  // Cuando el documento ya está dibujado, se abre el diálogo de impresión del
-  // navegador y, al cerrarse, se descarta (una impresión nueva pide datos nuevos).
-  useEffect(() => {
-    if (printout === null) return;
-    const clear = () => setPrintout(null);
-    window.addEventListener('afterprint', clear, { once: true });
-    window.print();
-    return () => window.removeEventListener('afterprint', clear);
-  }, [printout]);
+  // Cuando el documento (el expediente o una receta) ya está dibujado, se abre el
+  // diálogo de impresión del navegador y, al cerrarse, se descarta (una impresión
+  // nueva pide datos nuevos).
+  useImprimirAlMostrar(printout ?? prescriptionToPrint, () => {
+    setPrintout(null);
+    setPrescriptionToPrint(null);
+  });
+
+  // Después de emitir o reemplazar una receta: cerrar la ventana, avisar y recargar la tarjeta.
+  function finishPrescription(message: string) {
+    setPrescribing(null);
+    setNotice(message);
+    prescriptions.reload();
+  }
 
   // Después de guardar: cerrar la ventana, avisar y volver a la primera página (lo más nuevo).
   function finish(message: string) {
@@ -133,6 +165,19 @@ export function PaginaExpediente() {
             <AvisoAcceso access={history.data.access} />
 
             {canGrantReferrals && <SeccionInterconsultas patientId={patientId} />}
+
+            {canReadPrescriptions && (
+              <SeccionRecetas
+                prescriptions={prescriptions}
+                canAuthor={canAuthorPrescriptions}
+                canPrint={canAuthorPrescriptions && patient.data !== null}
+                onReplace={(original) => {
+                  setNotice('');
+                  setPrescribing({ kind: 'replace', original });
+                }}
+                onPrint={setPrescriptionToPrint}
+              />
+            )}
 
             {printError !== '' && (
               <div className="mb-4">
@@ -182,6 +227,11 @@ export function PaginaExpediente() {
                     setNotice('');
                     setAmending(entry);
                   }}
+                  canPrescribe={canPrescribeFrom}
+                  onPrescribe={(record) => {
+                    setNotice('');
+                    setPrescribing({ kind: 'issue', record });
+                  }}
                 />
                 <Paginacion
                   page={history.data.pagination.page}
@@ -207,7 +257,20 @@ export function PaginaExpediente() {
             onSaved={() => finish('Enmienda guardada en el expediente.')}
           />
         )}
+        {prescribing !== null && (
+          <FormularioReceta
+            patientId={patientId}
+            target={prescribing}
+            onClose={() => setPrescribing(null)}
+            onSaved={() =>
+              finishPrescription(prescribing.kind === 'issue' ? 'Receta emitida.' : 'Receta reemplazada: la nueva quedó vigente.')
+            }
+          />
+        )}
       </div>
+    {prescriptionToPrint !== null && patient.data !== null && (
+      <VistaRecetaImpresion patient={patient.data} prescription={prescriptionToPrint} />
+    )}
     {printout !== null && patient.data !== null && (
       <VistaImpresion
         patient={patient.data}

@@ -6,8 +6,8 @@
 //               (el tipo RecordEntry).
 // Lo usa:       paginas/expediente/LineaTiempoExpediente.tsx.
 //
-// No decide nada: si hay botón de enmendar y qué pasa al pulsarlo lo manda la
-// página. Los campos vacíos (tratamiento, notas) no se dibujan.
+// No decide nada: si hay botón de enmendar o de emitir receta y qué pasa al
+// pulsarlo lo manda la página. Los campos vacíos (tratamiento, notas) no se dibujan.
 // =============================================================================
 import { Boton } from '../../componentes/ui/Boton';
 import { Etiqueta } from '../../componentes/ui/Etiqueta';
@@ -20,6 +20,9 @@ interface EntradaExpedienteProps {
   correctedDate: string | null;
   canAmend: boolean;
   onAmend: (entry: RecordEntry) => void;
+  // Botón "Emitir receta" (solo en las notas de consulta que todavía no tienen la suya).
+  canPrescribe?: boolean;
+  onPrescribe?: (entry: RecordEntry) => void;
 }
 
 // Un dato de la nota (diagnóstico, tratamiento...) con su título.
@@ -32,7 +35,7 @@ function Dato({ title, text }: { title: string; text: string }) {
   );
 }
 
-export function EntradaExpediente({ entry, correctedDate, canAmend, onAmend }: EntradaExpedienteProps) {
+export function EntradaExpediente({ entry, correctedDate, canAmend, onAmend, canPrescribe = false, onPrescribe }: EntradaExpedienteProps) {
   const isAmendment = entry.amends_id !== null;
 
   return (
@@ -48,10 +51,19 @@ export function EntradaExpediente({ entry, correctedDate, canAmend, onAmend }: E
             {entry.amendment_count === 1 ? 'Enmendada 1 vez' : `Enmendada ${entry.amendment_count} veces`}
           </Etiqueta>
         )}
-        {canAmend && (
-          <Boton size="sm" className="ml-auto" onClick={() => onAmend(entry)} aria-label={`Enmendar la nota del ${formatDateTime(entry.created_at)}`}>
-            Enmendar
-          </Boton>
+        {(canAmend || canPrescribe) && (
+          <span className="ml-auto flex gap-2">
+            {canPrescribe && (
+              <Boton size="sm" onClick={() => onPrescribe?.(entry)} aria-label={`Emitir la receta de la nota del ${formatDateTime(entry.created_at)}`}>
+                Emitir receta
+              </Boton>
+            )}
+            {canAmend && (
+              <Boton size="sm" onClick={() => onAmend(entry)} aria-label={`Enmendar la nota del ${formatDateTime(entry.created_at)}`}>
+                Enmendar
+              </Boton>
+            )}
+          </span>
         )}
       </header>
 

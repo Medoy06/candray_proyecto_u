@@ -29,3 +29,15 @@ export const REFERRAL_MAX_DAYS = 30;
 // Consentimiento: cuánto puede medir la nota de "cómo se obtuvo". Igual a
 // CONSENT_NOTE_MAX_LENGTH del backend.
 export const CONSENT_NOTE_MAX_LENGTH = 200;
+
+// Receta óptica: los rangos que acepta cada medida. Iguales a PRESCRIPTION_LIMITS
+// del backend. Esfera, cilindro y adición van de 0.25 en 0.25; la distancia
+// pupilar, de 0.5 en 0.5.
+export const PRESCRIPTION_LIMITS = {
+  sphere: { min: -20, max: 20 },
+  cylinder: { min: -8, max: 8 },
+  axis: { min: 1, max: 180 },
+  addition: { min: 0.25, max: 4 },
+  pupillaryDistance: { min: 40, max: 80 },
+  lensNotesMaxLength: 500,
+} as const;

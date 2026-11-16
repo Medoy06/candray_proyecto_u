@@ -13,9 +13,12 @@ interface LineaTiempoExpedienteProps {
   entries: RecordEntry[];
   canAmend: boolean;
   onAmend: (entry: RecordEntry) => void;
+  // En qué notas se ofrece "Emitir receta" (la página decide cuáles) y qué pasa al pulsarlo.
+  canPrescribe?: (entry: RecordEntry) => boolean;
+  onPrescribe?: (entry: RecordEntry) => void;
 }
 
-export function LineaTiempoExpediente({ entries, canAmend, onAmend }: LineaTiempoExpedienteProps) {
+export function LineaTiempoExpediente({ entries, canAmend, onAmend, canPrescribe, onPrescribe }: LineaTiempoExpedienteProps) {
   // id de cada nota -> su fecha, para rotular las enmiendas.
   const dateById = new Map(entries.map((entry) => [entry.id, entry.created_at]));
 
@@ -28,6 +31,8 @@ export function LineaTiempoExpediente({ entries, canAmend, onAmend }: LineaTiemp
             correctedDate={entry.amends_id === null ? null : (dateById.get(entry.amends_id) ?? null)}
             canAmend={canAmend}
             onAmend={onAmend}
+            canPrescribe={canPrescribe?.(entry) ?? false}
+            onPrescribe={onPrescribe}
           />
         </li>
       ))}
