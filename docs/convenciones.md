@@ -61,6 +61,8 @@ Al escribir una prueba se comprueba que falle cuando se rompe a propósito la re
 
 Las pruebas del servidor que usan la base de datos trabajan siempre sobre `candray_test` y se niegan a correr contra cualquier otra.
 
+Los archivos de prueba del servidor corren en paralelo sobre esa misma base. Por eso cada prueba crea sus propios datos (con las ayudas de `pruebas/ayudas/`) y no debe depender de conteos globales, como "la tabla tiene exactamente N filas": otro archivo puede insertar datos en ese instante. Las pruebas de seguridad viven en `pruebas/seguridad/` y se describen en la decisión 010.
+
 ## Git y scripts
 
 Los mensajes de commit van en español y empiezan con el paso al que pertenecen (por ejemplo, "Paso 5c-4: pantalla de auditoría"). El archivo `backend/.env` nunca se sube al repositorio; solo se sube `backend/.env.example`, sin valores secretos.

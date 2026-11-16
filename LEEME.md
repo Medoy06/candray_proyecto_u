@@ -6,15 +6,23 @@ El sistema se construye por incrementos. El Incremento 0 ya está terminado y co
 
 ## Qué incluye hoy
 
-El acceso al sistema pide correo y contraseña. Después de cinco intentos fallidos la cuenta se bloquea durante quince minutos. Cada persona tiene un rol (administrador, médico, recepción, encargado de óptica o directivo) y cada rol puede hacer solo lo que le corresponde; el menú muestra únicamente las opciones permitidas. Quien trabaja en varias sucursales puede cambiar de una a otra desde el encabezado, y la interfaz toma el color de la sucursal activa.
+El sistema se construyó por incrementos y hoy cubre el recorrido completo de una clínica con óptica, desde el acceso hasta la venta de unos lentes.
 
-El administrador puede crear usuarios, cambiar su rol, asignarles sucursales, desbloquear cuentas y restablecer contraseñas. También puede crear y editar sucursales. El administrador y el directivo pueden consultar la bitácora de auditoría, que registra quién hizo qué y cuándo, con filtros por tipo, acción y fechas.
+**Acceso y administración.** El acceso pide correo y contraseña; después de cinco intentos fallidos la cuenta se bloquea durante quince minutos. Cada persona tiene un rol (administrador, médico, recepción, encargado de óptica o directivo) y cada rol puede hacer solo lo que le corresponde: el menú muestra únicamente las opciones permitidas y el servidor vuelve a comprobarlo en cada petición. Quien trabaja en varias sucursales puede cambiar de una a otra desde el encabezado, y la interfaz toma el color de la sucursal activa. El administrador crea usuarios, cambia roles, asigna sucursales, desbloquea cuentas, restablece contraseñas (lo que además cierra las sesiones abiertas de esa persona), administra sucursales y define los horarios semanales de los médicos.
 
-Las pantallas de recepción, médico y óptica pertenecen al Incremento 1 y todavía no están hechas; esos roles, por ahora, solo ven la página de inicio.
+**Recepción.** Busca y registra pacientes, agenda, reprograma y cancela citas viendo la disponibilidad de los médicos en todas las sucursales, registra el consentimiento del paciente para la óptica y consulta la bandeja de recordatorios de las citas de hoy y mañana (es una simulación: no se envía ningún mensaje).
+
+**Médico.** Ve su agenda, atiende al paciente y escribe su historia clínica (las notas no se editan: se corrigen con una enmienda), emite y reemplaza recetas ópticas, da interconsultas temporales a otros médicos e imprime el expediente. Solo abre el expediente de pacientes que atiende o que le interconsultaron, y cada acceso o negativa queda en la bitácora.
+
+**Óptica.** El encargado de ventas crea órdenes a partir de la receta vigente de un paciente que dio su consentimiento, las avanza (pendiente, en taller, lista, entregada) o las cancela con un motivo. Ve el desglose del IVA de cada orden. Si el paciente revoca el consentimiento, deja de ver las medidas.
+
+**Dirección.** El directivo consulta el panel de indicadores de todas las sucursales (citas, órdenes abiertas y ventas, sin datos de pacientes) y la bitácora de auditoría, que registra quién hizo qué y cuándo.
+
+Existe además una revisión de seguridad con pruebas automáticas que se conservan (ver [docs/decisiones/010-revision-de-seguridad.md](docs/decisiones/010-revision-de-seguridad.md)).
 
 ## Tecnologías
 
-El servidor usa Node.js, Express y TypeScript, con PostgreSQL como base de datos. La interfaz usa React, Vite, Tailwind CSS y TypeScript. Las pruebas se escriben con Vitest.
+El servidor usa Node.js, Express y TypeScript, con PostgreSQL como base de datos. La interfaz usa React, Vite, Tailwind CSS y TypeScript. Las pruebas se escriben con Vitest, y el comando `bash scripts/verificar_todo.sh` ejecuta todas las comprobaciones del proyecto de una vez.
 
 ## Cómo ponerlo en marcha
 
@@ -67,7 +75,7 @@ Existe además la sucursal Metrosur, que está inactiva a propósito para mostra
 | `backend/` | El servidor (API). Cada archivo de `src/` pertenece a una capa: modelos, servicios, controladores, rutas, esquemas e intermediarios. Sus pruebas están en `pruebas/`. |
 | `frontend/` | La interfaz web. Las páginas están en `src/paginas/`, los componentes reutilizables en `src/componentes/` y las pruebas en `pruebas/`. |
 | `base_datos/` | Las migraciones (`migraciones/`) que crean las tablas y la semilla (`semillas/`) con los datos de demostración. |
-| `scripts/` | Comandos de apoyo: aplicar migraciones, reiniciar la demostración e instalar el proyecto. |
+| `scripts/` | Comandos de apoyo: aplicar migraciones, reiniciar la demostración, instalar el proyecto y verificar que todo funcione. |
 | `docs/` | Instalación, convenciones de código, glosario y registro de decisiones. |
 
 ## Comandos útiles
@@ -75,6 +83,7 @@ Existe además la sucursal Metrosur, que está inactiva a propósito para mostra
 | Dónde | Comando | Para qué sirve |
 |---|---|---|
 | `backend/` | `npm run dev` | Inicia el servidor en el puerto 3000. |
+| raíz | `bash scripts/verificar_todo.sh` | Revisa roles, rutas, estructura, tipos, todas las pruebas y la versión de producción. Es lo que se ejecuta antes de cada commit. |
 | `backend/` | `npm test` | Ejecuta las pruebas del servidor sobre la base `candray_test`. |
 | `backend/` | `npm run migrar` | Aplica las migraciones pendientes. |
 | `backend/` | `npm run reiniciar_demo` | Borra la base de demostración y la deja como al inicio. |

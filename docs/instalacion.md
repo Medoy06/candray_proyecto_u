@@ -224,6 +224,24 @@ npm test
 
 Si todo está bien, ambas terminan con todas las pruebas en verde.
 
+Para ejecutar todas las comprobaciones del proyecto juntas (roles, rutas, estructura, tipos, pruebas del servidor y de la interfaz y la versión de producción), use desde la carpeta principal del proyecto:
+
+```
+bash scripts/verificar_todo.sh
+```
+
+Debe terminar con "Resultado: todo pasó". Las pruebas del servidor tardan unos segundos porque revisan todas las rutas con todos los roles.
+
+## Actualizar una instalación existente
+
+Cuando el proyecto recibe cambios que incluyen una migración nueva, la base de datos de demostración debe ponerse al día. Desde `backend/`:
+
+```
+npm run migrar
+```
+
+Aplica solo las migraciones que faltan y conserva los datos. Si prefiere empezar de cero con los datos de ejemplo, use `npm run reiniciar_demo`. Las pruebas no necesitan este paso: preparan su propia base cada vez.
+
 ## Volver la demostración al estado inicial
 
 Después de crear usuarios o sucursales de prueba, el siguiente comando deja la base como estaba al terminar la instalación. Borra todo su contenido, y por seguridad solo funciona con la base `candray_mockup`.
@@ -248,5 +266,7 @@ npm run reiniciar_demo
 **Vite avisa que el puerto 5173 está ocupado.** Hay otro programa usando ese puerto, y Vite escoge el siguiente libre. Use la dirección que muestra en pantalla.
 
 **Aparece `EADDRINUSE` al iniciar el servidor.** Algo más está usando el puerto 3000, a veces otra copia del mismo servidor que quedó abierta. Ciérrela, o cambie `PORT` en `backend/.env` y el destino del proxy en `frontend/vite.config.ts`.
+
+**Una pantalla da error 500 o "tabla no existe" después de actualizar el proyecto.** Falta aplicar una migración nueva: ejecute `npm run migrar` dentro de `backend/`.
 
 **El inicio de sesión responde que la cuenta está bloqueada.** Cinco intentos fallidos bloquean la cuenta quince minutos. Se puede esperar, desbloquearla desde la pantalla de Usuarios con la cuenta de administrador, o ejecutar `npm run reiniciar_demo`.

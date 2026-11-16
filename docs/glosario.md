@@ -16,7 +16,17 @@ El código y la documentación mezclan español e inglés. Los nombres que ve el
 | Perfil de permisos | `PERFIL_PERMISOS` | Elige entre `demostracion` (el administrador puede todo) y `estricto` (el administrador no accede a datos clínicos). |
 | Bitácora de auditoría | `audit_log` | El registro de quién hizo qué y cuándo. Solo se agrega información; no se edita ni se borra. |
 | Bloqueo de cuenta | `lockout` | La cuenta deja de aceptar contraseñas durante quince minutos después de cinco intentos fallidos. |
-| Incremento | | Cada etapa de construcción del sistema. El Incremento 0 es la base: acceso, usuarios, sucursales y auditoría. |
+| Consentimiento | `consent` | La autorización del paciente para que la óptica vea su receta. Hay uno vigente por paciente, vale para toda la clínica y dura hasta que se revoca. |
+| Receta | `prescription` | Las medidas ópticas que escribe un médico a partir de una consulta. No se edita: se reemplaza por otra, y solo la vigente sirve para una orden. |
+| Orden de óptica | `optical_order` | La venta de unos lentes a partir de una receta. Avanza por estados: pendiente, en taller, lista y entregada, o cancelada. |
+| Interconsulta | `referral` | Acceso temporal que un médico le da a otro al expediente de un paciente que él atiende. Vence sola y se puede revocar. |
+| Enmienda | `amendment` | Corrección de una nota clínica. La nota original no se modifica: la enmienda se agrega a su lado. |
+| Expediente | `medical_record` | La historia clínica de un paciente: sus notas, enmiendas, recetas e interconsultas. Solo la abre quien lo atiende. |
+| Recordatorio | `reminder` | Aviso de una cita próxima. En este prototipo es una simulación: se muestra a quién se le enviaría, pero no se envía. |
+| Panel de indicadores | `dashboard` | Pantalla con números por sucursal (citas, órdenes, ventas) que no incluye datos de pacientes. |
+| IVA | `VAT` | Impuesto de 13 % que ya viene incluido en los precios. El sistema separa el subtotal del IVA al mostrar una orden. |
+| Sesiones cerradas | `sessions_revoked_at` | Momento a partir del cual dejan de valer los tokens anteriores de un usuario; se fija al restablecer su contraseña. |
+| Incremento | | Cada etapa de construcción del sistema. El Incremento 0 es la base (acceso, usuarios, sucursales y auditoría) y los siguientes agregan lo clínico, la óptica y los indicadores. |
 | Mockup | | Prototipo funcional con datos ficticios, hecho para demostrar el sistema. |
 
 ## Términos técnicos
